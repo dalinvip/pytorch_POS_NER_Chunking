@@ -35,8 +35,8 @@ class CreateAlphabet:
         # unk and pad
         self.word_state[unkkey] = self.min_freq
         self.word_state[paddingkey] = self.min_freq
-        self.label_state[unkkey] = 1
-        self.label_state[paddingkey] = 1
+        # self.label_state[unkkey] = 1
+        # self.label_state[paddingkey] = 1
 
         # word and label Alphabet
         self.word_alphabet = Alphabet(min_freq=self.min_freq)

@@ -72,7 +72,8 @@ class EvalPRF:
         return ent
 
     def cleanLabel(self, label):
-        start = ['B', 'b', 'M', 'm', 'E', 'e', 'S', 's', 'I', 'i']
+        # start = ['B', 'b', 'M', 'm', 'E', 'e', 'S', 's', 'I', 'i']
+        start = ['B', 'b', 'I', 'i']
         if len(label) > 2 and label[1] == '-':
             if label[0] in start:
                 return label[2:]

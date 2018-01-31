@@ -17,6 +17,7 @@ import torch.nn.utils as utils
 import shutil
 import random
 from eval import Eval, EvalPRF
+from eval_bio import entity_evalPRF_exact
 import hyperparams
 torch.manual_seed(hyperparams.seed_num)
 random.seed(hyperparams.seed_num)
@@ -69,20 +70,27 @@ def train(train_iter, test_iter, model, args):
 def eval(data_iter, model, eval_instance, args):
     # eval time
     eval_PRF = EvalPRF()
+    gold_labels = []
+    predict_labels = []
     for batch_features in data_iter:
         logit = model(batch_features)
         for id_batch in range(batch_features.batch_length):
             inst = batch_features.inst[id_batch]
-            predict_labels = []
+            predict_label = []
             for id_word in range(inst.words_size):
                 maxId = getMaxindex(logit[id_batch][id_word], logit.size(2), args)
-                predict_labels.append(args.create_alphabet.label_alphabet.from_id(maxId))
+                predict_label.append(args.create_alphabet.label_alphabet.from_id(maxId))
+            gold_labels.append(inst.labels)
+            predict_labels.append(predict_label)
+            # print(inst.labels)
             # print(predict_labels)
-            eval_PRF.evalPRF(predict_labels=predict_labels, gold_labels=inst.labels, eval=eval_instance)
+            # eval_PRF.evalPRF(predict_labels=predict_labels, gold_labels=inst.labels, eval=eval_instance)
+    p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
 
     # calculate the F-Score
-    p, r, f = eval_instance.getFscore()
-    print("\neval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(p, r, f))
+    # p, r, f = eval_instance.getFscore()
+    # print("\neval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(p, r, f))
+    print("\neval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(p * 100, r * 100, f * 100))
 
 
 def cal_train_acc(batch_features, train_eval, model_out, args):
