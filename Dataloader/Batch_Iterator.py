@@ -107,7 +107,7 @@ class Iterators:
         # create with the Tensor/Variable
         # word features
         batch_word_features = Variable(torch.LongTensor(batch_length, max_word_size))
-        batch_label_features = Variable(torch.LongTensor(batch_length, max_word_size))
+        batch_label_features = Variable(torch.LongTensor(batch_length * max_word_size))
 
         for id_inst in range(batch_length):
             inst = insts[id_inst]
@@ -115,10 +115,12 @@ class Iterators:
             for id_word_index in range(max_word_size):
                 if id_word_index < inst.words_size:
                     batch_word_features.data[id_inst][id_word_index] = inst.words_index[id_word_index]
-                    batch_label_features.data[id_inst][id_word_index] = inst.label_index[id_word_index]
                 else:
                     batch_word_features.data[id_inst][id_word_index] = operator.word_paddingId
-                    batch_label_features.data[id_inst][id_word_index] = operator.label_paddingId
+                if id_word_index < len(inst.label_index):
+                    batch_label_features.data[id_inst * max_word_size + id_word_index] = inst.label_index[id_word_index]
+                else:
+                    batch_label_features.data[id_inst * max_word_size + id_word_index] = 0
 
         # batch
         features = Batch_Features()

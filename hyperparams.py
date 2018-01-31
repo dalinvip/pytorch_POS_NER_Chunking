@@ -23,8 +23,10 @@ class Hyperparams():
         # Datasets
         self.Conll2000 = True
         self.train_path = "./Data/conll2000/train.txt"
+        # self.train_path = "./Data/conll2000/train_test.txt"
         self.dev_path = None
         self.test_path = "./Data/conll2000/test.txt"
+        # self.test_path = "./Data/conll2000/test_test.txt"
 
         self.Conll2003 = False
         # self.train_path = "./Data/conll2003/eng.train"
@@ -35,7 +37,7 @@ class Hyperparams():
         self.epochs_shuffle = True
 
         # model
-        self.SumPooling = True
+        self.model_PNC = True
         self.embed_dim = 100
         self.dropout = 0.5
         self.dropout_embed = 0.3

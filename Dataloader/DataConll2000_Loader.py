@@ -63,7 +63,10 @@ class DataLoader():
         insts = []
         with open(path, encoding="UTF-8") as f:
             inst = Instance()
+            now_line = 0
             for line in f.readlines():
+                now_line += 1
+                sys.stdout.write("\rhandling with the {} line".format(now_line))
                 line = line.strip()
                 if line == "" and len(inst.words) != 0:
                     inst.words_size = len(inst.words)
@@ -79,9 +82,12 @@ class DataLoader():
                     #     continue
                     inst.words.append(word)
                     inst.labels.append(line[2])
+                # if now_line == 36 * 16:
+                #     break
             if len(inst.words) != 0:
                 inst.words_size = len(inst.words)
                 insts.append(inst)
+            print("\n")
         return insts
 
 

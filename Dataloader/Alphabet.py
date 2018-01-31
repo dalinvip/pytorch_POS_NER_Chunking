@@ -32,6 +32,12 @@ class CreateAlphabet:
         self.word_state = collections.OrderedDict()
         self.label_state = collections.OrderedDict()
 
+        # unk and pad
+        self.word_state[unkkey] = self.min_freq
+        self.word_state[paddingkey] = self.min_freq
+        self.label_state[unkkey] = 1
+        self.label_state[paddingkey] = 1
+
         # word and label Alphabet
         self.word_alphabet = Alphabet(min_freq=self.min_freq)
         self.label_alphabet = Alphabet()
@@ -69,6 +75,7 @@ class CreateAlphabet:
         print("Build Vocab Start...... ")
         datasets = self.build_data(train_data=train_data, dev_data=dev_data, test_data=test_data)
         # create the word Alphabet
+
         for index, data in enumerate(datasets):
             # word
             for word in data.words:
@@ -82,12 +89,6 @@ class CreateAlphabet:
                     self.label_state[label] = 1
                 else:
                     self.label_state[label] += 1
-
-        # unk and pad
-        self.word_state[unkkey] = self.min_freq
-        self.word_state[paddingkey] = self.min_freq
-        self.label_state[unkkey] = 1
-        self.label_state[paddingkey] = 1
 
         # Create id2words and words2id by the Alphabet Class
         self.word_alphabet.initialWord2idAndId2Word(self.word_state)

@@ -18,7 +18,12 @@ from Dataloader.Alphabet import *
 from Dataloader.Batch_Iterator import *
 from Dataloader import DataConll2000_Loader
 from Dataloader import DataConll2003_Loader
+from Dataloader.Load_Pretrained_Embed import *
+from Dataloader.Common import unkkey, paddingkey
+from models.model_PNC import *
+import train
 import random
+import shutil
 import hyperparams as hy
 # solve default encoding problem
 from imp import reload
@@ -34,7 +39,7 @@ random.seed(hy.seed_num)
 # init hyperparams instance
 hyperparams = hy.Hyperparams()
 
-parser = argparse.ArgumentParser(description="Text Classification for sentence level.")
+parser = argparse.ArgumentParser(description="POS, Chunking, NER")
 # Data path
 parser.add_argument('-train_path', type=str, default=hyperparams.train_path, help='train data path')
 parser.add_argument('-dev_path', type=str, default=hyperparams.dev_path, help='dev data path')
@@ -46,7 +51,7 @@ parser.add_argument('-epochs_shuffle', action='store_true', default=hyperparams.
 parser.add_argument('-Conll2000', action='store_true', default=hyperparams.Conll2000, help='Conll2000 Dataset')
 parser.add_argument('-Conll2003', action='store_true', default=hyperparams.Conll2003, help='=Conll2003 Dataset')
 # model params
-parser.add_argument("-SumPooling", action='store_true', default=hyperparams.SumPooling, help="SumPooling model")
+parser.add_argument("-model_PNC", action='store_true', default=hyperparams.model_PNC, help="model_PNC model")
 parser.add_argument('-embed_dim', type=int, default=hyperparams.embed_dim, help='embedding dim')
 parser.add_argument('-dropout', type=float, default=hyperparams.dropout, help='dropout')
 parser.add_argument('-dropout_embed', type=float, default=hyperparams.dropout_embed, help='dropout')
@@ -97,6 +102,20 @@ def load_Conll2000(args):
     return train_iter, test_iter, create_alphabet
 
 
+def show_params():
+    print("\nParameters:")
+    if os.path.exists("./Parameters.txt"):
+        os.remove("./Parameters.txt")
+    file = open("Parameters.txt", "a", encoding="UTF-8")
+    for attr, value in sorted(args.__dict__.items()):
+        if attr.upper() != "PRETRAINED_WEIGHT":
+            print("\t{}={}".format(attr.upper(), value))
+        file.write("\t{}={}\n".format(attr.upper(), value))
+    file.close()
+    shutil.copy("./Parameters.txt", args.save_dir)
+    shutil.copy("./hyperparams.py", args.save_dir)
+
+
 def main():
     # save file
     mulu = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -107,7 +126,40 @@ def main():
 
     # get iter
     train_iter, test_iter, create_alphabet = load_Conll2000(args)
-    print("a")
+    args.embed_num = create_alphabet.word_alphabet.vocab_size
+    args.class_num = create_alphabet.label_alphabet.vocab_size
+    args.paddingId = create_alphabet.word_paddingId
+    args.create_alphabet = create_alphabet
+    print("embed_num : {}, class_num : {}".format(args.embed_num, args.class_num))
+    print("PaddingID {}".format(args.paddingId))
+
+    if args.word_Embedding:
+        pretrain_embed = load_pretrained_emb_zeros(path=args.word_Embedding_Path,
+                                                   text_field_words_dict=create_alphabet.word_alphabet.id2words,
+                                                   pad=paddingkey)
+        # calculate_oov(path=args.word_Embedding_Path, text_field_words_dict=text_field.vocab.itos,
+        #               pad=text_field.pad_token)
+        args.pretrained_weight = pretrain_embed
+
+    # print params
+    show_params()
+
+    model = None
+    if args.model_PNC is True:
+        print("loading PNC(POS,NER,Chunking) model.....")
+        model = PNC(args)
+        shutil.copy("./models/model_PNC.py", args.save_dir)
+        print(model)
+        if args.use_cuda is True:
+            print("Using Cuda Speed Up......")
+            model = model.cuda()
+        print("Training Start......")
+        if os.path.exists("./Test_Result.txt"):
+            os.remove("./Test_Result.txt")
+
+    train.train(train_iter=train_iter, test_iter=test_iter, model=model, args=args)
+
+
 
 
 
