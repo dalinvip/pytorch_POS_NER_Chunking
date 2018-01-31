@@ -49,13 +49,14 @@ class DataLoader():
 
     def dataLoader(self, path=None, shuffle=False):
         assert isinstance(path, list), "Path Must Be In List"
+        print("Data Path {}".format(path))
         for id_data in range(len(path)):
             print("Loading Data Form {}".format(path[id_data]))
             insts = self.Load_Each_Data(path=path[id_data], shuffle=shuffle)
             self.data_list.append(insts)
         # return train/dev/test data
         # return self.data_list[0], self.data_list[1], self.data_list[2]
-        return self.data_list[0], self.data_list[1], self.data_list[2]
+        return self.data_list[0], self.data_list[1]
 
     def Load_Each_Data(self, path=None, shuffle=False):
         assert path is not None, "The Data Path Is Not Allow Empty."
@@ -65,14 +66,21 @@ class DataLoader():
             for line in f.readlines():
                 line = line.strip()
                 if line == "" and len(inst.words) != 0:
+                    inst.words_size = len(inst.words)
                     insts.append(inst)
                     inst = Instance()
                 else:
                     line = line.strip().split(" ")
+                    # print(line)
                     assert len(line) == 3, "Error Format"
-                    inst.words.append(line[0])
+                    word = line[0]
+                    # word = self.clean_str(word)
+                    # if word is "":
+                    #     continue
+                    inst.words.append(word)
                     inst.labels.append(line[2])
             if len(inst.words) != 0:
+                inst.words_size = len(inst.words)
                 insts.append(inst)
         return insts
 

@@ -91,7 +91,7 @@ class CreateAlphabet:
 
         # Create id2words and words2id by the Alphabet Class
         self.word_alphabet.initialWord2idAndId2Word(self.word_state)
-        self.label_alphabet.loadWord2idAndId2Word(self.label_state)
+        self.label_alphabet.initialWord2idAndId2Word(self.label_state)
 
         # unkId and paddingId
         self.word_unkId = self.word_alphabet.loadWord2idAndId2Word(unkkey)
