@@ -20,6 +20,11 @@ seed_num = 233
 
 class Hyperparams():
     def __init__(self):
+        # Task
+        self.POS = True
+        self.NER = False
+        self.Chunking = False
+
         # Datasets
         self.Conll2000 = True
         self.train_path = "./Data/conll2000/train.txt"
@@ -29,9 +34,9 @@ class Hyperparams():
         # self.test_path = "./Data/conll2000/test_test.txt"
 
         self.Conll2003 = False
-        # self.train_path = "./Data/conll2003/eng.train"
-        # self.dev_path = "./Data/conll2003/eng.testa"
-        # self.test_path = "./Data/conll2003/eng.testb"
+        # self.train_path = "./Data/conll2003_gold/train.txt"
+        # self.dev_path = "./Data/conll2003_gold/valid.txt"
+        # self.test_path = "./Data/conll2003_gold/test.txt"
 
         self.shuffle = True
         self.epochs_shuffle = True
@@ -67,7 +72,7 @@ class Hyperparams():
         # word_Embedding
         self.word_Embedding = True
         self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_RT2k_OOV.txt"
-        # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/sentence_classification_richfeat/enwiki.emb.source_feat_SST1.txt"
+        # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/context/pos_chunking_ner/enwiki.emb.source_Conll2000.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file_0113/file/context/sentence_classification/enwiki.emb.source_CR.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file_0113/file/context/enwiki.emb.source_CR.txt"
 

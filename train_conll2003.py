@@ -23,7 +23,7 @@ torch.manual_seed(hyperparams.seed_num)
 random.seed(hyperparams.seed_num)
 
 
-def train(train_iter, test_iter, model, args):
+def train(train_iter, dev_iter, test_iter, model, args):
     if args.use_cuda:
         model.cuda()
 
@@ -64,13 +64,14 @@ def train(train_iter, test_iter, model, args):
                                  "{:.6f}%".format(batch_count + 1, loss.data[0], train_eval.correct_num,
                                                   train_eval.gold_num, train_eval.acc() * 100))
         if steps is not 0:
-            # print("\n{} epoch dev F-score".format(epoch))
-            # print("\n")
+            dev_eval.clear()
+            eval(dev_iter, model, dev_eval, file, best_fscore, epoch, args, test=False)
+        if steps is not 0:
             test_eval.clear()
-            eval(test_iter, model, test_eval, file, best_fscore, epoch, args)
+            eval(test_iter, model, test_eval, file, best_fscore, epoch, args, test=True)
 
 
-def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args):
+def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args, test=False):
     # eval time
     eval_PRF = EvalPRF()
     gold_labels = []
@@ -92,15 +93,34 @@ def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args):
 
     # calculate the F-Score
     p, r, f = eval_instance.getFscore()
-    if f > best_fscore.best_fscore:
-        best_fscore.best_fscore = f
-        best_fscore.best_epoch = epoch
-    print("\neval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%".format(p, r, f))
-    print("The Current Best F-score: {:.6f}, Locate on {} Epoch.".format(best_fscore.best_fscore,
-                                                                             best_fscore.best_epoch))
-    file.write("The {} Epoch, All {} Epoch.\n".format(epoch, args.epochs))
-    file.write("eval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(p, r, f))
-    file.write("The Current Best F-score: {:.6f}, Locate on {} Epoch.\n\n".format(best_fscore.best_fscore, best_fscore.best_epoch))
+    test_flag = "Test"
+    if test is False:
+        print("\n")
+        test_flag = "Dev"
+        if f > best_fscore.best_dev_fscore:
+            best_fscore.best_dev_fscore = f
+            best_fscore.best_epoch = epoch
+            best_fscore.best_test = True
+    if test is True and best_fscore.best_test is True:
+        best_fscore.p = p
+        best_fscore.r = r
+        best_fscore.f = f
+    print("{} eval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%".format(test_flag, p, r, f))
+    if test is True:
+        print("The Current Best Dev F-score: {:.6f}, Locate on {} Epoch.".format(best_fscore.best_dev_fscore,
+                                                                                 best_fscore.best_epoch))
+    # if test is True and best_fscore.best_test is True:
+        print("The Current Best Test Result: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%".format(
+            best_fscore.p, best_fscore.r, best_fscore.f))
+    if test is False:
+        file.write("The {} Epoch, All {} Epoch.\n".format(epoch, args.epochs))
+    file.write("{} eval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(test_flag, p, r, f))
+    if test is True:
+        file.write("The Current Best Dev F-score: {:.6f}, Locate on {} Epoch.\n".format(best_fscore.best_dev_fscore, best_fscore.best_epoch))
+        file.write("The Current Best Test Result: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n\n".format(
+            best_fscore.p, best_fscore.r, best_fscore.f))
+    if test is True:
+        best_fscore.best_test = False
     # print("\neval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(p * 100, r * 100, f * 100))
 
 
@@ -128,7 +148,12 @@ def getMaxindex(model_out, label_size, args):
 
 class Best_Result:
     def __init__(self):
+        self.best_dev_fscore = -1
         self.best_fscore = -1
         self.best_epoch = 1
+        self.best_test = False
+        self.p = -1
+        self.r = -1
+        self.f = -1
 
 

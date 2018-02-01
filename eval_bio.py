@@ -294,7 +294,8 @@ def entity_eval(eval_type):
 
 def entity_evalPRF_exact(gold_labels, predict_labels):
     # prefix_array = [['b', 'B', 's', 'S'], ['m', 'M', 'e', 'E']]
-    prefix_array = [['b', 'B'], ['i', 'I']]
+    # prefix_array = [['b', 'B'], ['i', 'I']]
+    prefix_array = [['b', 'B'], ['b', 'B', 'i', 'I']]
 
     eval_type = 'exact'
     label_list = createAlphabet_labeler(gold_labels)

@@ -52,7 +52,6 @@ def load_pretrained_emb_zeros(path, text_field_words_dict, pad=None, set_padding
                 continue
             index = text_field_words_dict.get(values[0])  # digit or None
             if index:
-                # print(index)
                 iov_num += 1
                 vector = np.array([float(i) for i in values[1:]], dtype='float32')
                 embeddings[index] = vector

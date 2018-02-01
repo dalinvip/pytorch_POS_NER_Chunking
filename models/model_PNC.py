@@ -45,7 +45,7 @@ class PNC(nn.Module):
 
         self.linear = nn.Linear(in_features=D * 5, out_features=C, bias=True)
         init.xavier_uniform(self.linear.weight)
-        self.linear.bias.data.uniform_(-np.sqrt(6 / (D + 1)), np.sqrt(6 / (D + 1)))
+        self.linear.bias.data.uniform_(-np.sqrt(6 / (5 * D + 1)), np.sqrt(6 / (5 * D + 1)))
 
     def cat_embedding(self, x):
         # print(x)

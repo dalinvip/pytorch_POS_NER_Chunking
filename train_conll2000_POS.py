@@ -35,7 +35,7 @@ def train(train_iter, test_iter, model, args):
                                      weight_decay=args.weight_decay)
 
     file = open("./Test_Result.txt", encoding="UTF-8", mode="a", buffering=1)
-    best_fscore = Best_Result()
+    best_acc = Best_Result()
 
     steps = 0
     model_count = 0
@@ -67,40 +67,24 @@ def train(train_iter, test_iter, model, args):
             # print("\n{} epoch dev F-score".format(epoch))
             # print("\n")
             test_eval.clear()
-            eval(test_iter, model, test_eval, file, best_fscore, epoch, args)
+            eval(test_iter, model, test_eval, file, best_acc, epoch, args)
 
 
-def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args):
+def eval(data_iter, model, eval_instance, file, best_acc, epoch, args):
     # eval time
-    eval_PRF = EvalPRF()
-    gold_labels = []
-    predict_labels = []
     for batch_features in data_iter:
         logit = model(batch_features)
-        for id_batch in range(batch_features.batch_length):
-            inst = batch_features.inst[id_batch]
-            predict_label = []
-            for id_word in range(inst.words_size):
-                maxId = getMaxindex(logit[id_batch][id_word], logit.size(2), args)
-                predict_label.append(args.create_alphabet.label_alphabet.from_id(maxId))
-            # gold_labels.append(inst.labels)
-            # predict_labels.append(predict_label)
-            # print(inst.labels)
-            # print(predict_labels)
-            eval_PRF.evalPRF(predict_labels=predict_label, gold_labels=inst.labels, eval=eval_instance)
-    # p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
+        cal_train_acc(batch_features, eval_instance, logit, args)
 
-    # calculate the F-Score
-    p, r, f = eval_instance.getFscore()
-    if f > best_fscore.best_fscore:
-        best_fscore.best_fscore = f
-        best_fscore.best_epoch = epoch
-    print("\neval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%".format(p, r, f))
-    print("The Current Best F-score: {:.6f}, Locate on {} Epoch.".format(best_fscore.best_fscore,
-                                                                             best_fscore.best_epoch))
+    if eval_instance.acc() > best_acc.best_acc:
+        best_acc.best_acc = eval_instance.acc()
+        best_acc.best_epoch = epoch
+
+    print("\neval: precision = {:.6f}%".format(eval_instance.acc() * 100))
+    print("The Current Best Result: {:.6f}, Locate on {} Epoch.".format(best_acc.best_acc * 100, best_acc.best_epoch))
     file.write("The {} Epoch, All {} Epoch.\n".format(epoch, args.epochs))
-    file.write("eval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(p, r, f))
-    file.write("The Current Best F-score: {:.6f}, Locate on {} Epoch.\n\n".format(best_fscore.best_fscore, best_fscore.best_epoch))
+    file.write("eval: precision = {:.6f}%\n".format(eval_instance.acc() * 100))
+    file.write("The Current Best F-score: {:.6f}, Locate on {} Epoch.\n\n".format(best_acc.best_acc, best_acc.best_epoch))
     # print("\neval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(p * 100, r * 100, f * 100))
 
 
@@ -128,7 +112,7 @@ def getMaxindex(model_out, label_size, args):
 
 class Best_Result:
     def __init__(self):
-        self.best_fscore = -1
+        self.best_acc = -1
         self.best_epoch = 1
 
 

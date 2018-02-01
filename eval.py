@@ -93,7 +93,8 @@ class EvalPRF:
         return True
 
     def is_start_label(self, label):
-        start = ['b', 'B', 's', 'S']
+        # start = ['b', 'B', 's', 'S']
+        start = ['b', 'B']
         if(len(label) < 3):
             return False
         else:

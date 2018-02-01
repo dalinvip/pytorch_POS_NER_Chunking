@@ -16,12 +16,16 @@ import datetime
 import torch
 from Dataloader.Alphabet import *
 from Dataloader.Batch_Iterator import *
-from Dataloader import DataConll2000_Loader
-from Dataloader import DataConll2003_Loader
+from Dataloader import DataConll2000_Loader_Chunking
+from Dataloader import DataConll2000_Loader_POS
+from Dataloader import DataConll2003_Loader_NER
+from Dataloader import DataConll2003_Loader_Chunking
 from Dataloader.Load_Pretrained_Embed import *
 from Dataloader.Common import unkkey, paddingkey
 from models.model_PNC import *
 import train
+import train_conll2003
+import train_conll2000_POS
 import random
 import shutil
 import hyperparams as hy
@@ -50,6 +54,9 @@ parser.add_argument('-epochs_shuffle', action='store_true', default=hyperparams.
 # Datasets
 parser.add_argument('-Conll2000', action='store_true', default=hyperparams.Conll2000, help='Conll2000 Dataset')
 parser.add_argument('-Conll2003', action='store_true', default=hyperparams.Conll2003, help='=Conll2003 Dataset')
+parser.add_argument('-NER', action='store_true', default=hyperparams.NER, help='=NER Task')
+parser.add_argument('-Chunking', action='store_true', default=hyperparams.Chunking, help='=Chunking Task')
+parser.add_argument('-POS', action='store_true', default=hyperparams.POS, help='=POS Task')
 # model params
 parser.add_argument("-model_PNC", action='store_true', default=hyperparams.model_PNC, help="model_PNC model")
 parser.add_argument('-embed_dim', type=int, default=hyperparams.embed_dim, help='embedding dim')
@@ -84,10 +91,10 @@ args = parser.parse_args()
 
 
 # load data / create alphabet / create iterator
-def load_Conll2000(args):
-    print("Loading Conll2000 Data......")
+def load_Conll2000_Chunking(args):
+    print("Loading Conll2000 Chunking Data......")
     # read file
-    data_loader = DataConll2000_Loader.DataLoader()
+    data_loader = DataConll2000_Loader_Chunking.DataLoader()
     train_data, test_data = data_loader.dataLoader(path=[args.train_path, args.test_path], shuffle=args.shuffle)
 
     # create the alphabet
@@ -100,6 +107,65 @@ def load_Conll2000(args):
                                                        data=[train_data, test_data], operator=create_alphabet,
                                                        args=args)
     return train_iter, test_iter, create_alphabet
+
+
+# load data / create alphabet / create iterator
+def load_Conll2000_POS(args):
+    print("Loading Conll2000 POS Data......")
+    # read file
+    data_loader = DataConll2000_Loader_POS.DataLoader()
+    train_data, test_data = data_loader.dataLoader(path=[args.train_path, args.test_path], shuffle=args.shuffle)
+
+    # create the alphabet
+    create_alphabet = CreateAlphabet(min_freq=args.min_freq)
+    create_alphabet.build_vocab(train_data=train_data, test_data=test_data)
+
+    # create iterator
+    create_iter = Iterators()
+    train_iter, test_iter = create_iter.createIterator(batch_size=[args.batch_size, len(test_data)],
+                                                       data=[train_data, test_data], operator=create_alphabet,
+                                                       args=args)
+    return train_iter, test_iter, create_alphabet
+
+
+# load data / create alphabet / create iterator
+def load_Conll2003_NER(args):
+    print("Loading Conll2003 NER Data......")
+    # read file
+    data_loader = DataConll2003_Loader_NER.DataLoader()
+    train_data, dev_data, test_data = data_loader.dataLoader(path=[args.train_path, args.dev_path, args.test_path],
+                                                             shuffle=args.shuffle)
+
+    # create the alphabet
+    create_alphabet = CreateAlphabet(min_freq=args.min_freq)
+    create_alphabet.build_vocab(train_data=train_data, dev_data=dev_data, test_data=test_data)
+
+    # create iterator
+    create_iter = Iterators()
+    train_iter, dev_iter, test_iter = create_iter.createIterator(batch_size=[args.batch_size, len(dev_data), len(test_data)],
+                                                       data=[train_data, dev_data, test_data], operator=create_alphabet,
+                                                       args=args)
+    return train_iter, dev_iter, test_iter, create_alphabet
+
+
+# load data / create alphabet / create iterator
+def load_Conll2003_Chunking(args):
+    print("Loading Conll2003 Chunking Data......")
+    # read file
+    data_loader = DataConll2003_Loader_Chunking.DataLoader()
+    train_data, dev_data, test_data = data_loader.dataLoader(path=[args.train_path, args.dev_path, args.test_path],
+                                                             shuffle=args.shuffle)
+
+    # create the alphabet
+    create_alphabet = CreateAlphabet(min_freq=args.min_freq)
+    create_alphabet.build_vocab(train_data=train_data, dev_data=dev_data, test_data=test_data)
+
+    # create iterator
+    create_iter = Iterators()
+    train_iter, dev_iter, test_iter = create_iter.createIterator(batch_size=[args.batch_size, len(dev_data), len(test_data)],
+                                                       data=[train_data, dev_data, test_data], operator=create_alphabet,
+                                                       args=args)
+    return train_iter, dev_iter, test_iter, create_alphabet
 
 
 def show_params():
@@ -125,7 +191,16 @@ def main():
         os.makedirs(args.save_dir)
 
     # get iter
-    train_iter, test_iter, create_alphabet = load_Conll2000(args)
+    create_alphabet = None
+    if args.Conll2000 is True and args.Chunking is True:
+        train_iter, test_iter, create_alphabet = load_Conll2000_Chunking(args)
+    if args.Conll2000 is True and args.POS is True:
+        train_iter, test_iter, create_alphabet = load_Conll2000_POS(args)
+    if args.Conll2003 is True and args.NER is True:
+        train_iter, dev_iter, test_iter, create_alphabet = load_Conll2003_NER(args)
+    if args.Conll2003 is True and args.Chunking is True:
+        train_iter, dev_iter, test_iter, create_alphabet = load_Conll2003_Chunking(args)
+
     args.embed_num = create_alphabet.word_alphabet.vocab_size
     args.class_num = create_alphabet.label_alphabet.vocab_size
     args.paddingId = create_alphabet.word_paddingId
@@ -157,10 +232,14 @@ def main():
         if os.path.exists("./Test_Result.txt"):
             os.remove("./Test_Result.txt")
 
-    train.train(train_iter=train_iter, test_iter=test_iter, model=model, args=args)
-
-
-
+    if args.Conll2000 is True and args.Chunking is True:
+        train.train(train_iter=train_iter, test_iter=test_iter, model=model, args=args)
+    if args.Conll2000 is True and args.POS is True:
+        train_conll2000_POS.train(train_iter=train_iter, test_iter=test_iter, model=model, args=args)
+    if args.Conll2003 is True and args.NER is True:
+        train_conll2003.train(train_iter=train_iter, dev_iter=dev_iter, test_iter=test_iter, model=model, args=args)
+    if args.Conll2003 is True and args.Chunking is True:
+        train_conll2003.train(train_iter=train_iter, dev_iter=dev_iter, test_iter=test_iter, model=model, args=args)
 
 
 if __name__ == "__main__":
