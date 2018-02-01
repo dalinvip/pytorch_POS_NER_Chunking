@@ -209,6 +209,7 @@ def main():
     print("PaddingID {}".format(args.paddingId))
 
     if args.word_Embedding:
+        print("Using Pre_Trained Embedding.")
         pretrain_embed = load_pretrained_emb_zeros(path=args.word_Embedding_Path,
                                                    text_field_words_dict=create_alphabet.word_alphabet.id2words,
                                                    pad=paddingkey)

@@ -75,8 +75,6 @@ class Iterators:
 
                 label = inst.labels[index]
                 labelId = operator.label_alphabet.loadWord2idAndId2Word(label)
-                if labelId == -1:
-                    labelId = operator.label_unkId
                 inst.label_index.append(labelId)
 
     def Create_Each_Iterator(self, insts, batch_size, operator):
@@ -117,6 +115,7 @@ class Iterators:
                     batch_word_features.data[id_inst][id_word_index] = inst.words_index[id_word_index]
                 else:
                     batch_word_features.data[id_inst][id_word_index] = operator.word_paddingId
+
                 if id_word_index < len(inst.label_index):
                     batch_label_features.data[id_inst * max_word_size + id_word_index] = inst.label_index[id_word_index]
                 else:

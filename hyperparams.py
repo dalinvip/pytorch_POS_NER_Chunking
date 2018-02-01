@@ -21,16 +21,18 @@ seed_num = 233
 class Hyperparams():
     def __init__(self):
         # Task
-        self.POS = True
+        self.POS = False
         self.NER = False
-        self.Chunking = False
+        self.Chunking = True
 
         # Datasets
         self.Conll2000 = True
-        self.train_path = "./Data/conll2000/train.txt"
+        # self.train_path = "./Data/conll2000/train.txt"
+        self.train_path = "./Data/conll2000_1/conll2000.train.txt"
         # self.train_path = "./Data/conll2000/train_test.txt"
         self.dev_path = None
-        self.test_path = "./Data/conll2000/test.txt"
+        # self.test_path = "./Data/conll2000/test.txt"
+        self.test_path = "./Data/conll2000_1/conll2000.test.txt"
         # self.test_path = "./Data/conll2000/test_test.txt"
 
         self.Conll2003 = False
