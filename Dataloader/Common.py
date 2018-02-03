@@ -11,3 +11,4 @@
 
 unkkey = "<unk>"
 paddingkey = "<pad>"
+judge_flag = "##$$"

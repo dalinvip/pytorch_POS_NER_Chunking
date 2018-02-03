@@ -97,31 +97,23 @@ class PNC(nn.Module):
 
     def handle_word_context(self, sentence=None, word=None, windows_size=5):
         data_dict = {}
-        index = sentence.index(word)
+        index = (len(sentence) // 2)
         left = sentence[:index]
         right = sentence[(index + 1):]
         context_dict = {}
         for i in range(len(left)):
+            if left[i] == judge_flag:
+                continue
             context_dict["F-" + str(len(left) - i) + "@" + left[i]] = 0
         for i in range(len(right)):
+            if right[i] == judge_flag:
+                continue
             context_dict["F" + str(i + 1) + "@" + right[i]] = 0
         data_dict[word] = set(context_dict)
         return data_dict
 
-    def handle_word_context_1(self, sentence=None, windows_size=5):
-        data_dict = {}
-        for word_index, word in enumerate(sentence):
-            context_dict = {}
-            for i in range(windows_size):
-                if (word_index - i) > 0:
-                    context_dict["F-" + str(i + 1) + "@" + sentence[word_index - i - 1]] = 0
-            for i in range(windows_size):
-                if (word_index + i) < len(sentence) - 1:
-                    context_dict["F" + str(i + 1) + "@" + sentence[word_index + i + 1]] = 0
-            data_dict[word] = set(context_dict)
-        return data_dict
-
     def context(self, context_dict=None, stoi=None, itos=None):
+        # print(context_dict)
         context_num = 0
         context_embed_list = []
         context_embed = 0
@@ -145,14 +137,27 @@ class PNC(nn.Module):
             sentence_set = set(sentence)
             if paddingkey in sentence_set:
                 sentence = sentence[:sentence.index(paddingkey)]
-            # print(sentence)
+
             # context_dict = self.handle_word_context(sentence=sentence, windows_size=5)
             for id_word in range(x.size(1)):
                 word = itos[x.data[id_batch][id_word]]
                 if word != paddingkey:
-                    start = id_word - windows_size if id_word > windows_size else 0
-                    context_dict = self.handle_word_context(sentence=sentence[start:(id_word + windows_size + 1)],
-                                                            word=word, windows_size=windows_size)
+                    start = id_word
+                    sentence_paded = []
+                    for i in range((start - windows_size), (start + windows_size + 1)):
+                        if i >= len(sentence):
+                            break
+                        if i < 0:
+                            sentence_paded.append(judge_flag)
+                            continue
+                        else:
+                            sentence_paded.extend([sentence[i]])
+                    sentence_paded_len = (2 * windows_size + 1 - len(sentence_paded))
+                    if sentence_paded_len > 0:
+                        sentence_paded.extend([judge_flag] * sentence_paded_len)
+                    context_dict = self.handle_word_context(sentence=sentence_paded, word=word,
+                                                            windows_size=windows_size)
+
                     feat_sum_embedding, feat_ngram_num = self.word_n_gram(word=word, feat_embedding_dict=stoi)
                     if not isinstance(feat_sum_embedding, np.ndarray):
                         # if the word no n-gram in feature, replace with zero
@@ -160,7 +165,8 @@ class PNC(nn.Module):
                         feat_ngram_num = 1
                     # print(context_dict)
                     context_embed, context_num = self.context(context_dict=context_dict[word], stoi=stoi)
-                    feat_embed = np.divide(np.add(feat_sum_embedding, context_embed), np.add(feat_ngram_num, context_num))
+                    feat_embed = np.divide(np.add(feat_sum_embedding, context_embed),
+                                           np.add(feat_ngram_num, context_num))
                     # print(feat_embed)
                     feat_context_embed[id_batch][id_word] = torch.from_numpy(feat_embed)
                     # print(feat_context_embed)
