@@ -58,7 +58,10 @@ class Iterators:
                                                        operator=self.operator)
             self.data_iter.append(self.features)
             self.features = []
-        return self.data_iter[0], self.data_iter[1]
+        if len(self.data_iter) == 2:
+            return self.data_iter[0], self.data_iter[1]
+        if len(self.data_iter) == 3:
+            return self.data_iter[0], self.data_iter[1], self.data_iter[2]
 
     def convert_word2id(self, insts, operator):
         # print(len(insts))
@@ -97,15 +100,19 @@ class Iterators:
         batch_length = len(insts)
         # copy with the max length for padding
         max_word_size = -1
+        max_label_size = -1
         for inst in insts:
             word_size = inst.words_size
             if word_size > max_word_size:
                 max_word_size = word_size
 
+            if len(inst.labels) > max_label_size:
+                max_label_size = len(inst.labels)
+
         # create with the Tensor/Variable
         # word features
         batch_word_features = Variable(torch.LongTensor(batch_length, max_word_size))
-        batch_label_features = Variable(torch.LongTensor(batch_length * max_word_size))
+        batch_label_features = Variable(torch.LongTensor(batch_length * max_label_size))
 
         for id_inst in range(batch_length):
             inst = insts[id_inst]
@@ -117,9 +124,9 @@ class Iterators:
                     batch_word_features.data[id_inst][id_word_index] = operator.word_paddingId
 
                 if id_word_index < len(inst.label_index):
-                    batch_label_features.data[id_inst * max_word_size + id_word_index] = inst.label_index[id_word_index]
+                    batch_label_features.data[id_inst * max_label_size + id_word_index] = inst.label_index[id_word_index]
                 else:
-                    batch_label_features.data[id_inst * max_word_size + id_word_index] = 0
+                    batch_label_features.data[id_inst * max_label_size + id_word_index] = 0
 
         # batch
         features = Batch_Features()

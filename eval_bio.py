@@ -67,6 +67,8 @@ def is_continue(label, startLabel, prefix_array, distance):
         return False
     if (startLabel[0] == 's' or startLabel[0] == 'S') and startLabel[1] == '-':
         return False
+    if (startLabel[0] == 'b' or startLabel[0] == 'B') and startLabel[1] == '-':
+        return False
     if cleanLabel(label, prefix_array) != cleanLabel(startLabel, prefix_array):
         return False
     return True
@@ -294,8 +296,8 @@ def entity_eval(eval_type):
 
 def entity_evalPRF_exact(gold_labels, predict_labels):
     # prefix_array = [['b', 'B', 's', 'S'], ['m', 'M', 'e', 'E']]
-    # prefix_array = [['b', 'B'], ['i', 'I']]
-    prefix_array = [['b', 'B'], ['b', 'B', 'i', 'I']]
+    prefix_array = [['b', 'B'], ['i', 'I']]
+    # prefix_array = [['i', 'I'], ['b', 'B']]
 
     eval_type = 'exact'
     label_list = createAlphabet_labeler(gold_labels)

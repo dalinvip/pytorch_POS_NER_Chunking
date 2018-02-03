@@ -45,10 +45,10 @@ class PNC(nn.Module):
 
         self.linear = nn.Linear(in_features=D * 5, out_features=C, bias=True)
         init.xavier_uniform(self.linear.weight)
-        self.linear.bias.data.uniform_(-np.sqrt(6 / (5 * D + 1)), np.sqrt(6 / (5 * D + 1)))
+        self.linear.bias.data.uniform_(-np.sqrt(6 / (D + 1)), np.sqrt(6 / (D + 1)))
 
     def cat_embedding(self, x):
-        # print(x)
+        # print("source", x)
         batch = x.size(0)
         word_size = x.size(1)
         cated_embed = torch.zeros(batch, word_size, self.args.embed_dim * 5)
@@ -68,12 +68,17 @@ class PNC(nn.Module):
             cated_embed = Variable(cated_embed).cuda()
         else:
             cated_embed = Variable(cated_embed)
+        # print("cated", cated_embed)
         return cated_embed
 
     def forward(self, batch_features):
         word = batch_features.word_features
+        # print(word)
+        # print(self.args.create_alphabet.word_alphabet.from_id(word.data[0][0]))
+
         x = self.embed(word)  # (N,W,D)
         cated_embed = self.cat_embedding(x)
         logit = self.linear(cated_embed)
+        # print(logit.size())
         return logit
 

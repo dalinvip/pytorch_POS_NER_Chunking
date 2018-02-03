@@ -58,8 +58,10 @@ class DataLoader():
                 random.shuffle(insts)
             self.data_list.append(insts)
         # return train/dev/test data
-        # return self.data_list[0], self.data_list[1], self.data_list[2]
-        return self.data_list[0], self.data_list[1]
+        if len(self.data_list) == 3:
+            return self.data_list[0], self.data_list[1], self.data_list[2]
+        if len(self.data_list) == 2:
+            return self.data_list[0], self.data_list[1]
 
     def Load_Each_Data(self, path=None, shuffle=False):
         assert path is not None, "The Data Path Is Not Allow Empty."
@@ -71,28 +73,26 @@ class DataLoader():
                 now_line += 1
                 sys.stdout.write("\rhandling with the {} line".format(now_line))
                 line = line.strip()
+                # print(line)
                 if line == "" and len(inst.words) != 0:
+                # if line == "\n":
                     inst.words_size = len(inst.words)
                     insts.append(inst)
                     inst = Instance()
                 else:
                     line = line.strip().split(" ")
                     # print(line)
-                    assert len(line) == 3, "Error Format"
+                    assert len(line) == 2, "Error Format"
                     word = line[0]
-                    # word = self.clean_str(word)
-                    # if word == " ":
-                    #     print("rrrrrrrrrrrrrr", word)
-                    #     continue
-                    # print("\n" + word)
                     inst.words.append(word.lower())
-                    inst.labels.append(line[2])
-                # if now_line == 36 * 16:
-                #     break
+                    inst.labels.append(line[1])
+                if len(insts) == 16:
+                    break
             if len(inst.words) != 0:
                 inst.words_size = len(inst.words)
                 insts.append(inst)
             print("\n")
+
         return insts
 
 

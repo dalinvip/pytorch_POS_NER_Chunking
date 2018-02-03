@@ -21,24 +21,57 @@ seed_num = 233
 class Hyperparams():
     def __init__(self):
         # Task
-        self.POS = False
-        self.NER = False
-        self.Chunking = True
-
-        # Datasets
-        self.Conll2000 = True
+        # self.POS = False
+        # self.NER = False
+        # self.Chunking = True
+        #
+        # # Datasets
+        # self.Conll2000 = True
         # self.train_path = "./Data/conll2000/train.txt"
-        self.train_path = "./Data/conll2000_1/conll2000.train.txt"
-        # self.train_path = "./Data/conll2000/train_test.txt"
-        self.dev_path = None
+        # # self.train_path = "./Data/conll2000_1/conll2000.train.txt"
+        # # self.train_path = "./Data/conll2000/train_test.txt"
+        # self.dev_path = None
         # self.test_path = "./Data/conll2000/test.txt"
-        self.test_path = "./Data/conll2000_1/conll2000.test.txt"
-        # self.test_path = "./Data/conll2000/test_test.txt"
+        # # self.test_path = "./Data/conll2000_1/conll2000.test.txt"
+        # # self.test_path = "./Data/conll2000/test_test.txt"
+        #
+        # self.Conll2003 = False
+        # # self.train_path = "./Data/conll2003_gold/train.txt"
+        # # self.dev_path = "./Data/conll2003_gold/valid.txt"
+        # # self.test_path = "./Data/conll2003_gold/test.txt"
 
-        self.Conll2003 = False
-        # self.train_path = "./Data/conll2003_gold/train.txt"
-        # self.dev_path = "./Data/conll2003_gold/valid.txt"
-        # self.test_path = "./Data/conll2003_gold/test.txt"
+        # Dataset
+        self.Conll2000 = False
+        self.Chunking = False
+        # self.train_path = "./Data/Conll2000_Chunking/train.txt"
+        # self.dev_path = None
+        # self.test_path = "./Data/Conll2000_Chunking/test.txt"
+
+        self.POS = False
+        # self.train_path = "./Data/Conll2000_POS/train.txt"
+        # self.dev_path = None
+        # self.test_path = "./Data/Conll2000_POS/test.txt"
+
+        self.Conll2003 = True
+        self.NER = True
+        # self.train_path = "./Data/conll2003/eng.train"
+        # self.dev_path = "./Data/conll2003/eng.testa"
+        # self.test_path = "./Data/conll2003/eng.testb"
+
+        self.train_path = "./Data/Conll2003_NER/train.txt"
+        self.dev_path = "./Data/Conll2003_NER/valid.txt"
+        self.test_path = "./Data/Conll2003_NER/test.txt"
+
+
+
+        #
+        # self.train_path = "./Data/conll2003/eng.train"
+        #
+        # self.dev_path = "./Data/conll2003/eng.testa"
+
+
+        #
+        # self.test_path = "./Data/conll2003/eng.testb"
 
         self.shuffle = True
         self.epochs_shuffle = True
@@ -48,11 +81,11 @@ class Hyperparams():
         self.embed_dim = 100
         self.dropout = 0.5
         self.dropout_embed = 0.3
-        self.clip_max_norm = 5
+        self.clip_max_norm = 10
 
         # select optim algorhtim for train
         self.Adam = True
-        self.learning_rate = 0.001
+        self.learning_rate = 0.01
         self.learning_rate_decay = 1   # value is 1 means not change lr
         # L2 weight_decay
         self.weight_decay = 1e-8  # default value is zero in Adam SGD
@@ -72,9 +105,13 @@ class Hyperparams():
         self.min_freq = 1
 
         # word_Embedding
-        self.word_Embedding = True
-        self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_RT2k_OOV.txt"
-        # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/context/pos_chunking_ner/enwiki.emb.source_Conll2000.txt"
+        self.word_Embedding = False
+        self.ininital_from_Pretrained = True
+        # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/richfeat/enwiki.emb.feature"
+        # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2000.txt"
+        # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2003_OOV.txt"
+        self.word_Embedding_Path = "./Pretrain_Embedding/richfeat.enwiki.emb.feature.small"
+        # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/context/pos_chunking_ner/enwiki.emb.source_Conll2003.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file_0113/file/context/sentence_classification/enwiki.emb.source_CR.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file_0113/file/context/enwiki.emb.source_CR.txt"
 

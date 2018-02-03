@@ -8,7 +8,7 @@ class Eval:
         self.recall = 0
         self.fscore = 0
 
-    def clear(self):
+    def clear_PRF(self):
         self.predict_num = 0
         self.correct_num = 0
         self.gold_num = 0
@@ -88,14 +88,21 @@ class EvalPRF:
             return False
         if (startLabel[0] == 's' or startLabel[0] == 'S') and startLabel[1] == '-':
             return False
+        if (startLabel[0] == 'b' or startLabel[0] == 'B') and startLabel[1] == '-':
+            return False
         if self.cleanLabel(label) != self.cleanLabel(startLabel):
             return False
         return True
 
     def is_start_label(self, label):
         # start = ['b', 'B', 's', 'S']
+        # start = ['i', 'I']
         start = ['b', 'B']
-        if(len(label) < 3):
+        if len(label) < 3:
             return False
+        # else:
+        #     return (label[0] in start) and label[1] == '-'
         else:
-            return (label[0] in start) and label[1] == '-'
+            flag = ((label[0] in start) and label[1] == '-')
+            return flag
+            # return ((label[0] in start) and label[1] == '-')

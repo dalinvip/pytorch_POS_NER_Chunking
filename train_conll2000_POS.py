@@ -49,14 +49,19 @@ def train(train_iter, test_iter, model, args):
         print("now lr is {}".format(optimizer.param_groups[0].get("lr")))
         random.shuffle(train_iter)
         model.train()
+        # train_eval.clear()
         for batch_count, batch_features in enumerate(train_iter):
             model.zero_grad()
+            optimizer.zero_grad()
             logit = model(batch_features)
             # print(logit.size())
+            train_eval.clear_PRF()
             cal_train_acc(batch_features, train_eval, logit, args)
             loss = F.cross_entropy(logit.view(logit.size(0) * logit.size(1), logit.size(2)), batch_features.label_features)
             # print(loss)
             loss.backward()
+            if args.clip_max_norm is not None:
+                utils.clip_grad_norm(model.parameters(), max_norm=args.clip_max_norm)
             optimizer.step()
             steps += 1
             if steps % args.log_interval == 0:
@@ -66,16 +71,20 @@ def train(train_iter, test_iter, model, args):
         if steps is not 0:
             # print("\n{} epoch dev F-score".format(epoch))
             # print("\n")
-            test_eval.clear()
+            # test_eval.clear()
             eval(test_iter, model, test_eval, file, best_acc, epoch, args)
 
 
 def eval(data_iter, model, eval_instance, file, best_acc, epoch, args):
     # eval time
+    eval_instance.clear_PRF()
+    model.eval()
     for batch_features in data_iter:
         logit = model(batch_features)
         cal_train_acc(batch_features, eval_instance, logit, args)
-
+        # print(eval_instance.correct_num)
+        # print(eval_instance.gold_num)
+    model.train()
     if eval_instance.acc() > best_acc.best_acc:
         best_acc.best_acc = eval_instance.acc()
         best_acc.best_epoch = epoch
@@ -90,7 +99,8 @@ def eval(data_iter, model, eval_instance, file, best_acc, epoch, args):
 
 def cal_train_acc(batch_features, train_eval, model_out, args):
     assert model_out.dim() == 3
-    train_eval.clear()
+    # train_eval.clear()
+    # print("rrrrrrrrrrrrrrrr")
     for id_batch in range(model_out.size(0)):
         inst = batch_features.inst[id_batch]
         for id_word in range(inst.words_size):

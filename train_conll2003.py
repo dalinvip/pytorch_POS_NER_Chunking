@@ -64,35 +64,39 @@ def train(train_iter, dev_iter, test_iter, model, args):
                                  "{:.6f}%".format(batch_count + 1, loss.data[0], train_eval.correct_num,
                                                   train_eval.gold_num, train_eval.acc() * 100))
         if steps is not 0:
-            dev_eval.clear()
+            dev_eval.clear_PRF()
             eval(dev_iter, model, dev_eval, file, best_fscore, epoch, args, test=False)
         if steps is not 0:
-            test_eval.clear()
+            test_eval.clear_PRF()
             eval(test_iter, model, test_eval, file, best_fscore, epoch, args, test=True)
 
 
 def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args, test=False):
     # eval time
-    eval_PRF = EvalPRF()
+    # eval_PRF = EvalPRF()
     gold_labels = []
     predict_labels = []
     for batch_features in data_iter:
         logit = model(batch_features)
         for id_batch in range(batch_features.batch_length):
             inst = batch_features.inst[id_batch]
+            eval_PRF = EvalPRF()
             predict_label = []
             for id_word in range(inst.words_size):
                 maxId = getMaxindex(logit[id_batch][id_word], logit.size(2), args)
                 predict_label.append(args.create_alphabet.label_alphabet.from_id(maxId))
-            # gold_labels.append(inst.labels)
-            # predict_labels.append(predict_label)
+            gold_labels.append(inst.labels)
+            predict_labels.append(predict_label)
             # print(inst.labels)
             # print(predict_labels)
-            eval_PRF.evalPRF(predict_labels=predict_label, gold_labels=inst.labels, eval=eval_instance)
-    # p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
-
+            # eval_PRF.evalPRF(predict_labels=predict_label, gold_labels=inst.labels, eval=eval_instance)
+    p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
+    #
     # calculate the F-Score
-    p, r, f = eval_instance.getFscore()
+    # p, r, f = eval_instance.getFscore()
+    p = p * 100
+    f = f * 100
+    r = r * 100
     test_flag = "Test"
     if test is False:
         print("\n")
@@ -126,7 +130,7 @@ def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args, test=F
 
 def cal_train_acc(batch_features, train_eval, model_out, args):
     assert model_out.dim() == 3
-    train_eval.clear()
+    train_eval.clear_PRF()
     for id_batch in range(model_out.size(0)):
         inst = batch_features.inst[id_batch]
         for id_word in range(inst.words_size):

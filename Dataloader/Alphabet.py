@@ -8,6 +8,9 @@
     FILE :  Alphabet.py
     FUNCTION : None
 """
+
+import os
+import sys
 import torch
 import random
 import collections
@@ -23,10 +26,11 @@ class CreateAlphabet:
         Function:   Build Alphabet By Alphabet Class
         Notice:     The Class Need To Change So That Complete All Kinds Of Tasks
     """
-    def __init__(self, min_freq=1):
+    def __init__(self, min_freq=1, args=None):
 
         # minimum vocab size
         self.min_freq = min_freq
+        self.args = args
 
         # storage word and label
         self.word_state = collections.OrderedDict()
@@ -35,12 +39,14 @@ class CreateAlphabet:
         # unk and pad
         self.word_state[unkkey] = self.min_freq
         self.word_state[paddingkey] = self.min_freq
-        # self.label_state[unkkey] = 1
+        self.label_state[unkkey] = 1
         # self.label_state[paddingkey] = 1
 
         # word and label Alphabet
         self.word_alphabet = Alphabet(min_freq=self.min_freq)
         self.label_alphabet = Alphabet()
+        self.pretrained_alphabet = Alphabet(min_freq=self.min_freq)
+
 
         # unk key
         self.word_unkId = 0
@@ -93,16 +99,21 @@ class CreateAlphabet:
         # Create id2words and words2id by the Alphabet Class
         self.word_alphabet.initialWord2idAndId2Word(self.word_state)
         self.label_alphabet.initialWord2idAndId2Word(self.label_state)
+        if self.args.ininital_from_Pretrained is True:
+            self.pretrained_alphabet.initial_from_pretrain(pretrain_file=self.args.word_Embedding_Path,
+                                                           unk=unkkey, padding=paddingkey)
 
         # unkId and paddingId
         self.word_unkId = self.word_alphabet.loadWord2idAndId2Word(unkkey)
-        self.label_unkId = self.label_alphabet.loadWord2idAndId2Word(unkkey)
+        # self.label_unkId = self.label_alphabet.loadWord2idAndId2Word(unkkey)
         self.word_paddingId = self.word_alphabet.loadWord2idAndId2Word(paddingkey)
-        self.label_paddingId = self.label_alphabet.loadWord2idAndId2Word(paddingkey)
+        # self.label_paddingId = self.label_alphabet.loadWord2idAndId2Word(paddingkey)
 
         # fix the vocab
         self.word_alphabet.set_fixed_flag(True)
         self.label_alphabet.set_fixed_flag(True)
+        if self.args.ininital_from_Pretrained is True:
+            self.pretrained_alphabet.set_fixed_flag(True)
 
 
 class Alphabet:
@@ -156,3 +167,20 @@ class Alphabet:
             return defineStr
         else:
             return self.id2words[qid]
+
+    def initial_from_pretrain(self, pretrain_file, unk, padding):
+        print("initial alphabet from {}".format(pretrain_file))
+        self.loadWord2idAndId2Word(unk)
+        self.loadWord2idAndId2Word(padding)
+        now_line = 0
+        with open(pretrain_file, encoding="UTF-8") as f:
+            for line in f.readlines():
+                now_line += 1
+                sys.stdout.write("\rhandling with {} line".format(now_line))
+                info = line.split(" ")
+                self.loadWord2idAndId2Word(info[0])
+        f.close()
+        print("\nHandle Finished.")
+
+
+
