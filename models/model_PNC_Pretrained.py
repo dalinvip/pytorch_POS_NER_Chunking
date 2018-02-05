@@ -11,6 +11,7 @@
 
 import torch
 import torch.nn as nn
+import re
 import torch.nn.functional as F
 import numpy as np
 from torch.autograd import Variable as Variable
@@ -46,9 +47,12 @@ class PNC(nn.Module):
         self.dropout_embed = nn.Dropout(args.dropout_embed)
         self.dropout = nn.Dropout(args.dropout)
 
-        self.linear = nn.Linear(in_features=D * 5, out_features=C, bias=True)
-        init.xavier_uniform(self.linear.weight)
-        self.linear.bias.data.uniform_(-np.sqrt(6 / (D + 1)), np.sqrt(6 / (D + 1)))
+        self.batchNorm = nn.BatchNorm1d(D * 5)
+
+        self.linear = nn.Linear(in_features=D, out_features=C, bias=True)
+        # self.linear = nn.Linear(in_features=D * 5, out_features=C, bias=True)
+        # init.xavier_uniform(self.linear.weight)
+        # self.linear.bias.data.uniform_(-np.sqrt(6 / (D + 1)), np.sqrt(6 / (D + 1)))
 
     def cat_embedding(self, x):
         # print("source", x)
@@ -74,14 +78,38 @@ class PNC(nn.Module):
         # print("cated", cated_embed)
         return cated_embed
 
+    def clean_str(self, string):
+        """
+        Tokenization/string cleaning for all datasets except for SST.
+        Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+        """
+        string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
+        string = re.sub(r"\'s", " \'s", string)
+        string = re.sub(r"\'ve", " \'ve", string)
+        string = re.sub(r"n\'t", " n\'t", string)
+        string = re.sub(r"\'re", " \'re", string)
+        string = re.sub(r"\'d", " \'d", string)
+        string = re.sub(r"\'ll", " \'ll", string)
+        string = re.sub(r",", " , ", string)
+        string = re.sub(r"!", " ! ", string)
+        string = re.sub(r"\(", " \( ", string)
+        string = re.sub(r"\)", " \) ", string)
+        string = re.sub(r"\?", " \? ", string)
+        string = re.sub(r"\s{2,}", " ", string)
+        return string.strip()
+
     def word_n_gram(self, word=None, feat_embedding_dict=None):
         feat_count = 0
+
         word = "<" + word + ">"
         feat_embedding_list = []
         # print(word)
+        # if len(word) < 3:
+
         for feat_num in range(3, 7):
             for i in range(0, len(word) - feat_num + 1):
                 feat = word[i:(i + feat_num)]
+                # print("feat", feat)
                 if feat.strip() in feat_embedding_dict:
                     feat_count += 1
                     # print(feat)
@@ -132,15 +160,19 @@ class PNC(nn.Module):
         itos = self.args.create_alphabet.word_alphabet.id2words
         stoi = self.args.create_alphabet.pretrained_alphabet.words2id
         feat_context_embed = torch.zeros(x.size(0), x.size(1), self.pretrained_embed_dim)
+        # feat_context_embed = torch.randn(x.size(0), x.size(1), self.pretrained_embed_dim)
         for id_batch in range(x.size(0)):
-            sentence = [itos[word] for word in x.data[id_batch]]
+            sentence = [self.clean_str(itos[word]) for word in x.data[id_batch]]
             sentence_set = set(sentence)
+            # print(sentence)
             if paddingkey in sentence_set:
                 sentence = sentence[:sentence.index(paddingkey)]
 
             # context_dict = self.handle_word_context(sentence=sentence, windows_size=5)
+            # print("sentence", sentence)
             for id_word in range(x.size(1)):
                 word = itos[x.data[id_batch][id_word]]
+                word = self.clean_str(word)
                 if word != paddingkey:
                     start = id_word
                     sentence_paded = []
@@ -157,17 +189,24 @@ class PNC(nn.Module):
                         sentence_paded.extend([judge_flag] * sentence_paded_len)
                     context_dict = self.handle_word_context(sentence=sentence_paded, word=word,
                                                             windows_size=windows_size)
-
+                    # print(context_dict)
                     feat_sum_embedding, feat_ngram_num = self.word_n_gram(word=word, feat_embedding_dict=stoi)
+                    n_gram_flag = True
                     if not isinstance(feat_sum_embedding, np.ndarray):
+                        n_gram_flag = True
+                        # continue
                         # if the word no n-gram in feature, replace with zero
                         feat_sum_embedding = np.array(list([0] * self.pretrained_embed_dim))
+                        # feat_sum_embedding = np.array(self.embed.weight.data[]))
                         feat_ngram_num = 1
                     # print(context_dict)
                     context_embed, context_num = self.context(context_dict=context_dict[word], stoi=stoi)
+                    # context_embed, context_num = 0, 0
+                    # context_embed /= 10
                     feat_embed = np.divide(np.add(feat_sum_embedding, context_embed),
                                            np.add(feat_ngram_num, context_num))
                     # print(feat_embed)
+                    # feat_embed = np.square(feat_embed)
                     feat_context_embed[id_batch][id_word] = torch.from_numpy(feat_embed)
                     # print(feat_context_embed)
         if self.args.use_cuda is True:
@@ -178,13 +217,27 @@ class PNC(nn.Module):
 
     def forward(self, batch_features):
         word = batch_features.word_features
-        # print(word)
-        # print(self.args.create_alphabet.word_alphabet.from_id(word.data[0][0]))
-
-        # x = self.embed(word)  # (N,W,D)
         x = self.handle_embedding_input(word)
-        cated_embed = self.cat_embedding(x)
-        logit = self.linear(cated_embed)
+        # cated_embed = self.cat_embedding(x)
+        # file = open("./Embedding.txt", mode="a")
+        # for i in range(cated_embed.size(0)):
+        #     for j in range(cated_embed.size(1)):
+        #         file.write(str(np.array(cated_embed.data[i][j])))
+        logit = self.linear(x)
+        # file = open("./Embedding.txt", encoding="UTF-8", mode="a")
+        # for i in range(x.size(0)):
+        #     for j in range(x.size(1)):
+        #         # print(cated_embed[i][j])
+        #         file.write(str(np.array(x[i][j].data).tolist()))
+        # cated_embed = self.cat_embedding(x)
+        # print(cated_embed.size())
+        # cated_embed = self.batchNorm(cated_embed.permute(0, 2, 1))
+        # print(cated_embed.size())
+        # cated_embed = F.tanh(cated_embed)
+        # print(cated_embed.permute(0, 2, 1))
+
+        # logit = self.linear(cated_embed.permute(0, 2, 1))
+        # logit = self.linear(cated_embed)
         # print(logit.size())
         return logit
 

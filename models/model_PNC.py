@@ -27,7 +27,7 @@ class PNC(nn.Module):
     def __init__(self, args):
         super(PNC, self).__init__()
         self.args = args
-        self.cat_size = 2
+        self.cat_size = 5
 
         V = args.embed_num
         D = args.embed_dim
@@ -38,20 +38,23 @@ class PNC(nn.Module):
 
         if args.word_Embedding:
             self.embed.weight.data.copy_(args.pretrained_weight)
-        self.embed.weight.requires_grad = False
+        # self.embed.weight.requires_grad = False
 
         self.dropout_embed = nn.Dropout(args.dropout_embed)
         self.dropout = nn.Dropout(args.dropout)
 
-        self.linear = nn.Linear(in_features=D * 5, out_features=C, bias=True)
+        self.batchNorm = nn.BatchNorm1d(D * 5)
+
+        self.linear = nn.Linear(in_features=D * self.cat_size, out_features=C, bias=True)
+        # self.linear = nn.Linear(in_features=D, out_features=C, bias=True)
         init.xavier_uniform(self.linear.weight)
-        self.linear.bias.data.uniform_(-np.sqrt(6 / (D + 1)), np.sqrt(6 / (D + 1)))
+        # self.linear.bias.data.uniform_(-np.sqrt(6 / (D + 1)), np.sqrt(6 / (D + 1)))
 
     def cat_embedding(self, x):
         # print("source", x)
         batch = x.size(0)
         word_size = x.size(1)
-        cated_embed = torch.zeros(batch, word_size, self.args.embed_dim * 5)
+        cated_embed = torch.zeros(batch, word_size, self.args.embed_dim * self.cat_size)
         for id_batch in range(batch):
             batch_word_list = np.array(x[id_batch].data).tolist()
             batch_word_list.insert(0, [0] * self.args.embed_dim)
@@ -61,7 +64,7 @@ class PNC(nn.Module):
             batch_word_embed = torch.from_numpy(np.array(batch_word_list)).type(torch.FloatTensor)
             cat_list = []
             for id_word in range(word_size):
-                cat_list.append(torch.cat(batch_word_embed[id_word:(id_word + 5)]).unsqueeze(0))
+                cat_list.append(torch.cat(batch_word_embed[id_word:(id_word + self.cat_size)]).unsqueeze(0))
             sentence_cated_embed = torch.cat(cat_list)
             cated_embed[id_batch] = sentence_cated_embed
         if self.args.use_cuda is True:
@@ -78,6 +81,8 @@ class PNC(nn.Module):
 
         x = self.embed(word)  # (N,W,D)
         cated_embed = self.cat_embedding(x)
+        # cated_embed = self.batchNorm(cated_embed.permute(0, 2, 1))
+        cated_embed = F.tanh(cated_embed)
         logit = self.linear(cated_embed)
         # print(logit.size())
         return logit

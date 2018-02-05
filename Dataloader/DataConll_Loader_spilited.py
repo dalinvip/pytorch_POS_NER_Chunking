@@ -53,9 +53,9 @@ class DataLoader():
         for id_data in range(len(path)):
             print("Loading Data Form {}".format(path[id_data]))
             insts = self.Load_Each_Data(path=path[id_data], shuffle=shuffle)
-            if shuffle is True:
-                print("shuffle data......")
-                random.shuffle(insts)
+            # if shuffle is True:
+            #     print("shuffle data......")
+                # random.shuffle(insts)
             self.data_list.append(insts)
         # return train/dev/test data
         if len(self.data_list) == 3:
@@ -75,10 +75,11 @@ class DataLoader():
                 line = line.strip()
                 # print(line)
                 if line == "" and len(inst.words) != 0:
-                # if line == "\n":
                     inst.words_size = len(inst.words)
                     insts.append(inst)
                     inst = Instance()
+                elif line == "":
+                    continue
                 else:
                     # line = self.clean_str(line)
                     line = line.strip().split(" ")
@@ -87,9 +88,17 @@ class DataLoader():
                     # if len(line) != 2:
                     #     continue
                     word = line[0]
+                    if word == "-DOCSTART-":
+                        continue
+                    # # if line[1] == "O":
+                    # #     continue
+                    # if (not word[0].isalpha()) and line[1][0] == "I":
+                    #     continue
+                    # if (not word[0].isalpha()) and line[1][0] == "O":
+                    #     continue
                     inst.words.append(word.lower())
                     inst.labels.append(line[1])
-                # if len(insts) == 16:
+                # if len(insts) == 2560:
                 #     break
             if len(inst.words) != 0:
                 inst.words_size = len(inst.words)

@@ -52,17 +52,14 @@ def train(train_iter, dev_iter, test_iter, model, args):
         for batch_count, batch_features in enumerate(train_iter):
             model.zero_grad()
             logit = model(batch_features)
-            # print(logit.size())
-            cal_train_acc(batch_features, train_eval, logit, args)
-            loss = F.cross_entropy(logit.view(logit.size(0) * logit.size(1), logit.size(2)), batch_features.label_features)
+            loss_logit = logit.view(logit.size(0) * logit.size(1), logit.size(2))
+            loss = F.cross_entropy(loss_logit, batch_features.label_features)
             # print(loss)
             loss.backward()
             optimizer.step()
             steps += 1
             if steps % args.log_interval == 0:
-                sys.stdout.write("\rbatch_count = [{}] , loss is {:.6f} , (correct/ total_num) = acc ({} / {}) = "
-                                 "{:.6f}%".format(batch_count + 1, loss.data[0], train_eval.correct_num,
-                                                  train_eval.gold_num, train_eval.acc() * 100))
+                sys.stdout.write("\rbatch_count = [{}] , loss is {:.6f}".format(batch_count + 1, loss.data[0]))
         if steps is not 0:
             dev_eval.clear_PRF()
             eval(dev_iter, model, dev_eval, file, best_fscore, epoch, args, test=False)
@@ -73,30 +70,32 @@ def train(train_iter, dev_iter, test_iter, model, args):
 
 def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args, test=False):
     # eval time
-    # eval_PRF = EvalPRF()
+    eval_PRF = EvalPRF()
     gold_labels = []
     predict_labels = []
     for batch_features in data_iter:
         logit = model(batch_features)
         for id_batch in range(batch_features.batch_length):
             inst = batch_features.inst[id_batch]
-            eval_PRF = EvalPRF()
+            # eval_PRF = EvalPRF()
             predict_label = []
             for id_word in range(inst.words_size):
                 maxId = getMaxindex(logit[id_batch][id_word], logit.size(2), args)
+                if maxId == args.create_alphabet.label_unkId:
+                    continue
                 predict_label.append(args.create_alphabet.label_alphabet.from_id(maxId))
             gold_labels.append(inst.labels)
             predict_labels.append(predict_label)
             # print(inst.labels)
             # print(predict_labels)
-            # eval_PRF.evalPRF(predict_labels=predict_label, gold_labels=inst.labels, eval=eval_instance)
-    p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
+            eval_PRF.evalPRF(predict_labels=predict_label, gold_labels=inst.labels, eval=eval_instance)
+    # p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
     #
     # calculate the F-Score
-    # p, r, f = eval_instance.getFscore()
-    p = p * 100
-    f = f * 100
-    r = r * 100
+    p, r, f = eval_instance.getFscore()
+    # p = p * 100
+    # f = f * 100
+    # r = r * 100
     test_flag = "Test"
     if test is False:
         print("\n")
@@ -128,25 +127,17 @@ def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args, test=F
     # print("\neval: precision = {:.6f}%  recall = {:.6f}% , f-score = {:.6f}%\n".format(p * 100, r * 100, f * 100))
 
 
-def cal_train_acc(batch_features, train_eval, model_out, args):
-    assert model_out.dim() == 3
-    train_eval.clear_PRF()
-    for id_batch in range(model_out.size(0)):
-        inst = batch_features.inst[id_batch]
-        for id_word in range(inst.words_size):
-            maxId = getMaxindex(model_out[id_batch][id_word], model_out.size(2), args)
-            if maxId == inst.label_index[id_word]:
-                train_eval.correct_num += 1
-        train_eval.gold_num += inst.words_size
-
-
 def getMaxindex(model_out, label_size, args):
+    # print(model_out.size())
+    # print(label_size)
+    # print(model_out)
     max = model_out.data[0]
     maxIndex = 0
     for idx in range(1, label_size):
         if model_out.data[idx] > max:
             max = model_out.data[idx]
             maxIndex = idx
+    # print(maxIndex)
     return maxIndex
 
 

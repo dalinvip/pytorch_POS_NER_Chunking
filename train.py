@@ -13,7 +13,9 @@ import os
 import sys
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
 import torch.nn.utils as utils
+import torch.optim.lr_scheduler as lr_scheduler
 import shutil
 import random
 from eval import Eval, EvalPRF
@@ -34,6 +36,12 @@ def train(train_iter, test_iter, model, args):
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr,
                                      weight_decay=args.weight_decay)
 
+    # lambda1 = lambda epoch: epoch // 5
+    # lambda2 = lambda epoch: args.learning_rate_decay * epoch
+    # print("lambda1 {} lambda2 {} ".format(lambda1, lambda2))
+    # scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=[lambda2])
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=8, gamma=args.learning_rate_decay)
+
     file = open("./Test_Result.txt", encoding="UTF-8", mode="a", buffering=1)
     best_fscore = Best_Result()
 
@@ -44,63 +52,68 @@ def train(train_iter, test_iter, model, args):
     train_eval = Eval()
     dev_eval = Eval()
     test_eval = Eval()
+    # loss_F = nn.NLLLoss()
+    # softmax = nn.Softmax(dim=1)
     for epoch in range(1, args.epochs+1):
+        scheduler.step()
         print("\n## The {} Epoch，All {} Epochs ！##".format(epoch, args.epochs))
         print("now lr is {}".format(optimizer.param_groups[0].get("lr")))
         random.shuffle(train_iter)
+        # random.shuffle(test_iter)
         model.train()
         for batch_count, batch_features in enumerate(train_iter):
-            model.zero_grad()
+            # model.zero_grad()
             optimizer.zero_grad()
             logit = model(batch_features)
             # print(logit.size())
-            train_eval.clear_PRF()
-            cal_train_acc(batch_features, train_eval, logit, args)
+            # print(batch_features.label_features.size())
             loss = F.cross_entropy(logit.view(logit.size(0) * logit.size(1), logit.size(2)), batch_features.label_features)
+            # loss = loss_F(softmax(logit.view(logit.size(0) * logit.size(1), logit.size(2))),
+            #               batch_features.label_features)
             # print(loss)
             loss.backward()
-            if args.clip_max_norm is not None:
-                utils.clip_grad_norm(model.parameters(), max_norm=args.clip_max_norm)
+            # if args.clip_max_norm is not None:
+            #     utils.clip_grad_norm(model.parameters(), max_norm=args.clip_max_norm)
             optimizer.step()
             steps += 1
             if steps % args.log_interval == 0:
-                sys.stdout.write("\rbatch_count = [{}] , loss is {:.6f} , (correct/ total_num) = acc ({} / {}) = "
-                                 "{:.6f}%".format(batch_count + 1, loss.data[0], train_eval.correct_num,
-                                                  train_eval.gold_num, train_eval.acc() * 100))
+                sys.stdout.write("\rbatch_count = [{}] , loss is {:.6f}".format(batch_count + 1, loss.data[0]))
         if steps is not 0:
-            # print("\n{} epoch dev F-score".format(epoch))
-            # print("\n")
-            # test_eval.clear()
             eval(test_iter, model, test_eval, file, best_fscore, epoch, args)
 
 
 def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args):
     # eval time
     eval_instance.clear_PRF()
-    # eval_PRF = EvalPRF()
+    eval_PRF = EvalPRF()
     gold_labels = []
     predict_labels = []
     for batch_features in data_iter:
         logit = model(batch_features)
+        loss = F.cross_entropy(logit.view(logit.size(0) * logit.size(1), logit.size(2)),
+                               batch_features.label_features, size_average=False)
         for id_batch in range(batch_features.batch_length):
             inst = batch_features.inst[id_batch]
-            eval_PRF = EvalPRF()
+            # eval_PRF = EvalPRF()
             predict_label = []
             for id_word in range(inst.words_size):
                 maxId = getMaxindex(logit[id_batch][id_word], logit.size(2), args)
+                # if maxId == args.create_alphabet.label_unkId:
+                #     continue
                 predict_label.append(args.create_alphabet.label_alphabet.from_id(maxId))
             gold_labels.append(inst.labels)
             predict_labels.append(predict_label)
             # print("ewe", len(inst.labels))
             # print("rrr", len(predict_label))
-            # eval_PRF.evalPRF(predict_labels=predict_label, gold_labels=inst.labels, eval=eval_instance)
-    p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
+            eval_PRF.evalPRF(predict_labels=predict_label, gold_labels=inst.labels, eval=eval_instance)
+            # p, r, f = eval_instance.getFscore()
+        # p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
 
-    p = p * 100
-    f = f * 100
-    r = r * 100
+    # p = p * 100
+    # f = f * 100
+    # r = r * 100
     # calculate the F-Score
-    # p, r, f = eval_instance.getFscore()
+    p, r, f = eval_instance.getFscore()
     if f > best_fscore.best_fscore:
         best_fscore.best_fscore = f
         best_fscore.best_epoch = epoch

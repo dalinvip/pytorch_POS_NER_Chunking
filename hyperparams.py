@@ -20,26 +20,6 @@ seed_num = 233
 
 class Hyperparams():
     def __init__(self):
-        # Task
-        # self.POS = False
-        # self.NER = False
-        # self.Chunking = True
-        #
-        # # Datasets
-        # self.Conll2000 = True
-        # self.train_path = "./Data/conll2000/train.txt"
-        # # self.train_path = "./Data/conll2000_1/conll2000.train.txt"
-        # # self.train_path = "./Data/conll2000/train_test.txt"
-        # self.dev_path = None
-        # self.test_path = "./Data/conll2000/test.txt"
-        # # self.test_path = "./Data/conll2000_1/conll2000.test.txt"
-        # # self.test_path = "./Data/conll2000/test_test.txt"
-        #
-        # self.Conll2003 = False
-        # # self.train_path = "./Data/conll2003_gold/train.txt"
-        # # self.dev_path = "./Data/conll2003_gold/valid.txt"
-        # # self.test_path = "./Data/conll2003_gold/test.txt"
-
         # Dataset
         self.Conll2000 = False
         self.Chunking = False
@@ -109,8 +89,10 @@ class Hyperparams():
         self.ininital_from_Pretrained = True
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/richfeat/enwiki.emb.feature"
         # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2000.txt"
+        # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_feat_Conll2000_1_NoZero.txt"
         # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2003_OOV.txt"
-        self.word_Embedding_Path = "./Pretrain_Embedding/richfeat.enwiki.emb.feature.small"
+        self.word_Embedding_Path = "./Pretrain_Embedding/richfeat.enwiki.emb.feature.small.0120.txt"
+        # self.word_Embedding_Path = "./Pretrain_Embedding/parallel.enwiki.emb.feature.small"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/context/pos_chunking_ner/enwiki.emb.source_Conll2003.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file_0113/file/context/sentence_classification/enwiki.emb.source_CR.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file_0113/file/context/enwiki.emb.source_CR.txt"

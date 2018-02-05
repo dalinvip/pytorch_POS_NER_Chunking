@@ -31,7 +31,7 @@ class Eval:
         if self.precision + self.recall == 0:
             self.fscore = 0
         else:
-            self.fscore = 2 * (self.precision * self.recall) / (self.precision + self.recall)
+            self.fscore = (2 * (self.precision * self.recall)) / (self.precision + self.recall)
 
         return self.precision, self.recall, self.fscore
 
@@ -44,12 +44,20 @@ class EvalPRF:
     def evalPRF(self, predict_labels, gold_labels, eval):
         gold_ent = self.get_ent(gold_labels)
         predict_ent = self.get_ent(predict_labels)
+        # print("\npredict_labels", predict_labels)
+        # print("predict_ent", predict_ent)
+        # print("gold_labels", gold_labels)
+        # print("gold_ent", gold_ent)
         eval.predict_num += len(predict_ent)
         eval.gold_num += len(gold_ent)
 
+        count = 0
         for p in predict_ent:
             if p in gold_ent:
+                count += 1
                 eval.correct_num += 1
+        # print("count", count)
+        # print("correct_num", eval.correct_num)
 
     def get_ent(self, labels):
         idx = 0
@@ -72,10 +80,10 @@ class EvalPRF:
         return ent
 
     def cleanLabel(self, label):
-        # start = ['B', 'b', 'M', 'm', 'E', 'e', 'S', 's', 'I', 'i']
-        start = ['B', 'b', 'I', 'i']
+        start_label = ['B', 'b', 'M', 'm', 'E', 'e', 'S', 's', 'I', 'i']
+        # start_label = ['B', 'b', "I", 'i']
         if len(label) > 2 and label[1] == '-':
-            if label[0] in start:
+            if label[0] in start_label:
                 return label[2:]
         return label
 
@@ -88,21 +96,16 @@ class EvalPRF:
             return False
         if (startLabel[0] == 's' or startLabel[0] == 'S') and startLabel[1] == '-':
             return False
-        if (startLabel[0] == 'b' or startLabel[0] == 'B') and startLabel[1] == '-':
+        if (startLabel[0] == 'B' or startLabel[0] == 'b') and startLabel[1] == '-':
             return False
         if self.cleanLabel(label) != self.cleanLabel(startLabel):
             return False
         return True
 
     def is_start_label(self, label):
-        # start = ['b', 'B', 's', 'S']
-        # start = ['i', 'I']
-        start = ['b', 'B']
+        start = ['b', 'B', 's', 'S']
+        # start = ['b', 'B']
         if len(label) < 3:
             return False
-        # else:
-        #     return (label[0] in start) and label[1] == '-'
         else:
-            flag = ((label[0] in start) and label[1] == '-')
-            return flag
-            # return ((label[0] in start) and label[1] == '-')
+            return (label[0] in start) and label[1] == '-'

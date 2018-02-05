@@ -126,10 +126,13 @@ def load_Conll2003(args):
     # create the alphabet
     create_alphabet = CreateAlphabet(min_freq=args.min_freq, args=args)
     create_alphabet.build_vocab(train_data=train_data, dev_data=dev_data, test_data=test_data)
-
+    #
     # create iterator
     create_iter = Iterators()
-    train_iter, dev_iter, test_iter = create_iter.createIterator(batch_size=[args.batch_size, len(dev_data), len(test_data)],
+    # train_iter, dev_iter, test_iter = create_iter.createIterator(batch_size=[args.batch_size, len(dev_data), len(test_data)],
+    #                                                    data=[train_data, dev_data, test_data], operator=create_alphabet,
+    #                                                    args=args)
+    train_iter, dev_iter, test_iter = create_iter.createIterator(batch_size=[args.batch_size, args.batch_size, args.batch_size],
                                                        data=[train_data, dev_data, test_data], operator=create_alphabet,
                                                        args=args)
     return train_iter, dev_iter, test_iter, create_alphabet
@@ -173,7 +176,7 @@ def main():
 
     if args.word_Embedding:
         print("Using Pre_Trained Embedding.")
-        pretrain_embed = load_pretrained_emb_zeros(path=args.word_Embedding_Path,
+        pretrain_embed = load_pretrained_emb_avg(path=args.word_Embedding_Path,
                                                    text_field_words_dict=create_alphabet.word_alphabet.id2words,
                                                    pad=paddingkey)
         # calculate_oov(path=args.word_Embedding_Path, text_field_words_dict=text_field.vocab.itos,

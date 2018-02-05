@@ -52,10 +52,10 @@ def train(train_iter, test_iter, model, args):
         # train_eval.clear()
         for batch_count, batch_features in enumerate(train_iter):
             model.zero_grad()
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
             logit = model(batch_features)
             # print(logit.size())
-            train_eval.clear_PRF()
+            # train_eval.clear_PRF()
             cal_train_acc(batch_features, train_eval, logit, args)
             loss = F.cross_entropy(logit.view(logit.size(0) * logit.size(1), logit.size(2)), batch_features.label_features)
             # print(loss)
@@ -81,7 +81,7 @@ def eval(data_iter, model, eval_instance, file, best_acc, epoch, args):
     model.eval()
     for batch_features in data_iter:
         logit = model(batch_features)
-        cal_train_acc(batch_features, eval_instance, logit, args)
+        cal_eval_acc(batch_features, eval_instance, logit, args)
         # print(eval_instance.correct_num)
         # print(eval_instance.gold_num)
     model.train()
@@ -99,8 +99,7 @@ def eval(data_iter, model, eval_instance, file, best_acc, epoch, args):
 
 def cal_train_acc(batch_features, train_eval, model_out, args):
     assert model_out.dim() == 3
-    # train_eval.clear()
-    # print("rrrrrrrrrrrrrrrr")
+    train_eval.clear_PRF()
     for id_batch in range(model_out.size(0)):
         inst = batch_features.inst[id_batch]
         for id_word in range(inst.words_size):
@@ -109,6 +108,17 @@ def cal_train_acc(batch_features, train_eval, model_out, args):
                 train_eval.correct_num += 1
         train_eval.gold_num += inst.words_size
 
+
+def cal_eval_acc(batch_features, eval_eval, model_out, args):
+    assert model_out.dim() == 3
+    # train_eval.clear_PRF()
+    for id_batch in range(model_out.size(0)):
+        inst = batch_features.inst[id_batch]
+        for id_word in range(inst.words_size):
+            maxId = getMaxindex(model_out[id_batch][id_word], model_out.size(2), args)
+            if maxId == inst.label_index[id_word]:
+                eval_eval.correct_num += 1
+        eval_eval.gold_num += inst.words_size
 
 def getMaxindex(model_out, label_size, args):
     max = model_out.data[0]

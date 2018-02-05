@@ -35,11 +35,13 @@ class CreateAlphabet:
         # storage word and label
         self.word_state = collections.OrderedDict()
         self.label_state = collections.OrderedDict()
+        # self.word_state = {}
+        # self.label_state = {}
 
         # unk and pad
         self.word_state[unkkey] = self.min_freq
         self.word_state[paddingkey] = self.min_freq
-        self.label_state[unkkey] = 1
+        # self.label_state[unkkey] = 1
         # self.label_state[paddingkey] = 1
 
         # word and label Alphabet
@@ -95,6 +97,8 @@ class CreateAlphabet:
                     self.label_state[label] = 1
                 else:
                     self.label_state[label] += 1
+
+        # self.label_state[unkkey] = 1
 
         # Create id2words and words2id by the Alphabet Class
         self.word_alphabet.initialWord2idAndId2Word(self.word_state)
