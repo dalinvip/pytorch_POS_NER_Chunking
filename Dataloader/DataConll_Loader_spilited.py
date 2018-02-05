@@ -27,24 +27,20 @@ class DataLoader():
         print("Loading Data......")
         self.data_list = []
 
-    def clean_str(self, string):
-        """
-        Tokenization/string cleaning for all datasets except for SST.
-        Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
-        """
-        string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
-        string = re.sub(r"\'s", " \'s", string)
-        string = re.sub(r"\'ve", " \'ve", string)
-        string = re.sub(r"n\'t", " n\'t", string)
-        string = re.sub(r"\'re", " \'re", string)
-        string = re.sub(r"\'d", " \'d", string)
-        string = re.sub(r"\'ll", " \'ll", string)
-        string = re.sub(r",", " , ", string)
-        string = re.sub(r"!", " ! ", string)
-        string = re.sub(r"\(", " \( ", string)
-        string = re.sub(r"\)", " \) ", string)
-        string = re.sub(r"\?", " \? ", string)
-        string = re.sub(r"\s{2,}", " ", string)
+    def clean_conll(self, string):
+        string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", string)
+        string = re.sub(r"\'s", "", string)
+        string = re.sub(r"\'ve", "", string)
+        string = re.sub(r"n\'t", "", string)
+        string = re.sub(r"\'re", "", string)
+        string = re.sub(r"\'d", "", string)
+        string = re.sub(r"\'ll", "", string)
+        string = re.sub(r",", "", string)
+        string = re.sub(r"!", "", string)
+        string = re.sub(r"\(", "", string)
+        string = re.sub(r"\)", "", string)
+        string = re.sub(r"\?", "", string)
+        string = re.sub(r"\s{2,}", "", string)
         return string.strip()
 
     def dataLoader(self, path=None, shuffle=False):
@@ -90,6 +86,9 @@ class DataLoader():
                     word = line[0]
                     if word == "-DOCSTART-":
                         continue
+                    # word = self.clean_conll(word)
+                    # if word == "":
+                    #     continue
                     # # if line[1] == "O":
                     # #     continue
                     # if (not word[0].isalpha()) and line[1][0] == "I":

@@ -85,6 +85,7 @@ parser.add_argument("-min_freq", type=int, default=hyperparams.min_freq, help="b
 parser.add_argument("-word_Embedding", action="store_true", default=hyperparams.word_Embedding, help="whether to use pretrained word embedding")
 parser.add_argument("-ininital_from_Pretrained", action="store_true", default=hyperparams.ininital_from_Pretrained, help="whether to use pretrained word embedding")
 parser.add_argument("-word_Embedding_Path", type=str, default=hyperparams.word_Embedding_Path, help="Pretrained Embedding Path")
+parser.add_argument("-word_Embedding_Path_Source", type=str, default=hyperparams.word_Embedding_Path_Source, help="Pretrained Embedding Path")
 # GPU
 parser.add_argument('-use_cuda', action='store_true', default=hyperparams.use_cuda, help='use gpu')
 parser.add_argument("-gpu_device", type=int, default=hyperparams.gpu_device, help="gpu device number")

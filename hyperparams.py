@@ -21,26 +21,26 @@ seed_num = 233
 class Hyperparams():
     def __init__(self):
         # Dataset
-        self.Conll2000 = False
-        self.Chunking = False
-        # self.train_path = "./Data/Conll2000_Chunking/train.txt"
-        # self.dev_path = None
-        # self.test_path = "./Data/Conll2000_Chunking/test.txt"
+        self.Conll2000 = True
+        self.Chunking = True
+        self.train_path = "./Data/Conll2000_Chunking/train.txt"
+        self.dev_path = None
+        self.test_path = "./Data/Conll2000_Chunking/test.txt"
 
         self.POS = False
         # self.train_path = "./Data/Conll2000_POS/train.txt"
         # self.dev_path = None
         # self.test_path = "./Data/Conll2000_POS/test.txt"
 
-        self.Conll2003 = True
-        self.NER = True
+        self.Conll2003 = False
+        self.NER = False
         # self.train_path = "./Data/conll2003/eng.train"
         # self.dev_path = "./Data/conll2003/eng.testa"
         # self.test_path = "./Data/conll2003/eng.testb"
 
-        self.train_path = "./Data/Conll2003_NER/train.txt"
-        self.dev_path = "./Data/Conll2003_NER/valid.txt"
-        self.test_path = "./Data/Conll2003_NER/test.txt"
+        # self.train_path = "./Data/Conll2003_NER/train.txt"
+        # self.dev_path = "./Data/Conll2003_NER/valid.txt"
+        # self.test_path = "./Data/Conll2003_NER/test.txt"
 
 
 
@@ -65,10 +65,10 @@ class Hyperparams():
 
         # select optim algorhtim for train
         self.Adam = True
-        self.learning_rate = 0.01
+        self.learning_rate = 0.001
         self.learning_rate_decay = 1   # value is 1 means not change lr
         # L2 weight_decay
-        self.weight_decay = 1e-8  # default value is zero in Adam SGD
+        self.weight_decay = 0  # default value is zero in Adam SGD
         # self.weight_decay = 0   # default value is zero in Adam SGD
         self.epochs = 1000
         self.train_batch_size = 16
@@ -88,10 +88,12 @@ class Hyperparams():
         self.word_Embedding = False
         self.ininital_from_Pretrained = True
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/richfeat/enwiki.emb.feature"
+        # self.word_Embedding_Path_Source = "/home/lzl/mszhang/suda_file0120/file/file0120/richfeat/enwiki.emb.source"
         # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2000.txt"
         # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_feat_Conll2000_1_NoZero.txt"
         # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2003_OOV.txt"
         self.word_Embedding_Path = "./Pretrain_Embedding/richfeat.enwiki.emb.feature.small.0120.txt"
+        self.word_Embedding_Path_Source = "./Pretrain_Embedding/richfeat.enwiki.emb.source.small.0120.txt"
         # self.word_Embedding_Path = "./Pretrain_Embedding/parallel.enwiki.emb.feature.small"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/context/pos_chunking_ner/enwiki.emb.source_Conll2003.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file_0113/file/context/sentence_classification/enwiki.emb.source_CR.txt"

@@ -43,12 +43,7 @@ class PNC(nn.Module):
                                                                    vocab_size=self.args.create_alphabet.pretrained_alphabet.vocab_size,
                                                                    words2id=self.args.create_alphabet.pretrained_alphabet.words2id,
                                                                    padding=paddingkey, unk=unkkey)
-            self.embed_source, self.pretrained_embed_dim_source = Pretrain_Embed(file=args.word_Embedding_Path_Source,
-                                                                                 vocab_size=self.args.create_alphabet.pretrained_alphabet_source.vocab_size,
-                                                                                 words2id=self.args.create_alphabet.pretrained_alphabet_source.words2id,
-                                                                                 padding=paddingkey, unk=unkkey)
         self.embed.weight.requires_grad = False
-        self.embed_source.weight.requires_grad = False
 
         self.bilstm = nn.LSTM(input_size=500, hidden_size=100, bidirectional=False, bias=True)
 
@@ -166,7 +161,6 @@ class PNC(nn.Module):
         windows_size = 5
         itos = self.args.create_alphabet.word_alphabet.id2words
         stoi = self.args.create_alphabet.pretrained_alphabet.words2id
-        stoi_source = self.args.create_alphabet.pretrained_alphabet_source.words2id
         feat_context_embed = torch.zeros(x.size(0), x.size(1), self.pretrained_embed_dim)
         # feat_context_embed = torch.randn(x.size(0), x.size(1), self.pretrained_embed_dim)
         for id_batch in range(x.size(0)):
@@ -187,13 +181,6 @@ class PNC(nn.Module):
                 # print("word", word)
                 if word != paddingkey:
                     word = self.clean_conll(word)
-
-                    if word in stoi_source:
-                        wordId = stoi_source[word]
-                        word_embed = self.embed_source.weight.data[wordId]
-                        feat_context_embed[id_batch][id_word] = word_embed
-                        continue
-
                     start = id_word
                     sentence_paded = []
                     for i in range((start - windows_size), (start + windows_size + 1)):
@@ -210,7 +197,6 @@ class PNC(nn.Module):
                     # print(sentence_paded)
                     context_dict = self.handle_word_context(sentence=sentence_paded, word=word,
                                                             windows_size=windows_size)
-
                     # print(context_dict)
                     feat_sum_embedding, feat_ngram_num = self.word_n_gram(word=word, feat_embedding_dict=stoi)
                     n_gram_flag = True

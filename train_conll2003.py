@@ -81,8 +81,8 @@ def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args, test=F
             predict_label = []
             for id_word in range(inst.words_size):
                 maxId = getMaxindex(logit[id_batch][id_word], logit.size(2), args)
-                if maxId == args.create_alphabet.label_unkId:
-                    continue
+                # if maxId == args.create_alphabet.label_unkId:
+                #     continue
                 predict_label.append(args.create_alphabet.label_alphabet.from_id(maxId))
             gold_labels.append(inst.labels)
             predict_labels.append(predict_label)

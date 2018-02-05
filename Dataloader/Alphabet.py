@@ -41,13 +41,14 @@ class CreateAlphabet:
         # unk and pad
         self.word_state[unkkey] = self.min_freq
         self.word_state[paddingkey] = self.min_freq
-        # self.label_state[unkkey] = 1
+        self.label_state[unkkey] = 1
         # self.label_state[paddingkey] = 1
 
         # word and label Alphabet
         self.word_alphabet = Alphabet(min_freq=self.min_freq)
         self.label_alphabet = Alphabet()
         self.pretrained_alphabet = Alphabet(min_freq=self.min_freq)
+        self.pretrained_alphabet_source = Alphabet(min_freq=self.min_freq)
 
 
         # unk key
@@ -106,6 +107,8 @@ class CreateAlphabet:
         if self.args.ininital_from_Pretrained is True:
             self.pretrained_alphabet.initial_from_pretrain(pretrain_file=self.args.word_Embedding_Path,
                                                            unk=unkkey, padding=paddingkey)
+            self.pretrained_alphabet_source.initial_from_pretrain(pretrain_file=self.args.word_Embedding_Path_Source,
+                                                                  unk=unkkey, padding=paddingkey)
 
         # unkId and paddingId
         self.word_unkId = self.word_alphabet.loadWord2idAndId2Word(unkkey)
