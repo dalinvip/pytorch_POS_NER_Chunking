@@ -55,7 +55,7 @@ class PNC(nn.Module):
         self.dropout_embed = nn.Dropout(args.dropout_embed)
         self.dropout = nn.Dropout(args.dropout)
 
-        self.batchNorm = nn.BatchNorm1d(D * 5)
+        self.batchNorm = nn.BatchNorm1d(D)
 
         # self.linear = nn.Linear(in_features=D, out_features=C, bias=True)
         self.linear = nn.Linear(in_features=D * 5, out_features=C, bias=True)
@@ -107,8 +107,6 @@ class PNC(nn.Module):
 
         word = "<" + word + ">"
         feat_embedding_list = []
-        # print("word", word)
-        # if len(word) < 3:
 
         for feat_num in range(3, 7):
             for i in range(0, len(word) - feat_num + 1):
@@ -125,6 +123,10 @@ class PNC(nn.Module):
                     feat_embedding_list.append(np.array(list_float))
                     # feat_embedding = np.array(feat_embedding) + np.array(list_float)
         feat_embedding = np.sum(feat_embedding_list, axis=0)
+        if not isinstance(feat_embedding, np.ndarray):
+            unkId = feat_embedding_dict[unkkey]
+            feat_embedding, feat_count = np.array(self.embed.weight.data[unkId]), 1
+
         return feat_embedding, feat_count
 
     def handle_word_context(self, sentence=None, word=None, windows_size=5):
@@ -143,15 +145,19 @@ class PNC(nn.Module):
                 continue
             context_dict["F" + str(i + 1) + "@" + right[i]] = 0
         data_dict[word] = set(context_dict)
+        # data_dict[word] = context_dict
         return data_dict
 
-    def context(self, context_dict=None, stoi=None, itos=None):
-        # print(context_dict)
+    def context(self, context_di=None, stoi=None, itos=None):
+        # print("context_dict", context_dict)
+        # print("stoi", stoi)
         context_num = 0
         context_embed_list = []
         context_embed = 0
-        for context in context_dict:
+        for context in context_di:
+            # print("asdasd", context)
             if context in stoi:
+                # print("context", context)
                 context_num += 1
                 contextID = stoi[context]
                 # print("context", context)
@@ -160,7 +166,28 @@ class PNC(nn.Module):
                 # print("list_float", list_float)
                 context_embed_list.append(np.array(list_float))
         context_embed = np.sum(context_embed_list, axis=0)
+        if not isinstance(context_embed, np.ndarray):
+            unkId = stoi[unkkey]
+            context_embed = np.array(self.embed.weight.data[unkId])
+            context_num = 1
         return context_embed, context_num
+
+    def handle_sentence(self, id_word=None, windows_size=None, sentence=None):
+        start = id_word
+        sentence_paded = []
+        for i in range((start - windows_size), (start + windows_size + 1)):
+            if i >= len(sentence):
+                break
+            if i < 0:
+                sentence_paded.append(judge_flag)
+                continue
+            else:
+                sentence_paded.extend([sentence[i]])
+        sentence_paded_len = (2 * windows_size + 1 - len(sentence_paded))
+        if sentence_paded_len > 0:
+            sentence_paded.extend([judge_flag] * sentence_paded_len)
+
+        return sentence_paded
 
     def handle_embedding_input(self, x):
         windows_size = 5
@@ -171,77 +198,54 @@ class PNC(nn.Module):
         # feat_context_embed = torch.randn(x.size(0), x.size(1), self.pretrained_embed_dim)
         for id_batch in range(x.size(0)):
             # sentence = [self.clean_str(itos[word]) for word in x.data[id_batch]]
-            sentence = [itos[word] for word in x.data[id_batch]]
-            sentence_set = set(sentence)
+            sentence_all = [itos[word] for word in x.data[id_batch]]
+            sentence_set = set(sentence_all)
             # print(sentence)
+            sentence = sentence_all
             if paddingkey in sentence_set:
-                sentence = sentence[:sentence.index(paddingkey)]
+                sentence = sentence_all[:sentence_all.index(paddingkey)]
 
-            sentence = [self.clean_conll(w) for w in sentence]
+            # sentence = [self.clean_conll(w) for w in sentence]
 
-            # context_dict = self.handle_word_context(sentence=sentence, windows_size=5)
-            # print("sentence", sentence)
             for id_word in range(x.size(1)):
-                word = itos[x.data[id_batch][id_word]]
+            # for word in sentence:
+                word = sentence_all[id_word]
+                # word = itos[x.data[id_batch][id_word]]
                 # print("sentence", sentence)
                 # print("word", word)
-                if word != paddingkey:
-                    word = self.clean_conll(word)
+                if word == paddingkey:
+                    continue
+                # word = self.clean_conll(word)
+                # print("word_clean", word)
 
-                    if word in stoi_source:
-                        wordId = stoi_source[word]
-                        word_embed = self.embed_source.weight.data[wordId]
-                        feat_context_embed[id_batch][id_word] = word_embed
-                        continue
+                # if word in stoi_source:
+                #     wordId = stoi_source[word]
+                #     word_embed = self.embed_source.weight.data[wordId]
+                #     feat_context_embed[id_batch][id_word] = word_embed
+                #     continue
 
-                    start = id_word
-                    sentence_paded = []
-                    for i in range((start - windows_size), (start + windows_size + 1)):
-                        if i >= len(sentence):
-                            break
-                        if i < 0:
-                            sentence_paded.append(judge_flag)
-                            continue
-                        else:
-                            sentence_paded.extend([sentence[i]])
-                    sentence_paded_len = (2 * windows_size + 1 - len(sentence_paded))
-                    if sentence_paded_len > 0:
-                        sentence_paded.extend([judge_flag] * sentence_paded_len)
-                    # print(sentence_paded)
-                    context_dict = self.handle_word_context(sentence=sentence_paded, word=word,
-                                                            windows_size=windows_size)
+                feat_sum_embedding, feat_ngram_num = self.word_n_gram(word=word, feat_embedding_dict=stoi)
 
-                    # print(context_dict)
-                    feat_sum_embedding, feat_ngram_num = self.word_n_gram(word=word, feat_embedding_dict=stoi)
-                    n_gram_flag = True
-                    if not isinstance(feat_sum_embedding, np.ndarray):
-                        n_gram_flag = True
-                        # continue
-                        # if the word no n-gram in feature, replace with zero
-                        # feat_sum_embedding = np.array(list([0] * self.pretrained_embed_dim))
-                        feat_sum_embedding = np.array(np.random.uniform(-0.25, 0.25, self.pretrained_embed_dim).round(6).tolist())
-                        # feat_sum_embedding = np.array(self.embed.weight.data[]))
-                        feat_ngram_num = 1
-                    # print(context_dict)
-                    # context_embed, context_num = self.context(context_dict=context_dict[word], stoi=stoi)
-                    context_embed, context_num = 0, 0
-                    # context_embed /= 10
-                    feat_embed = np.divide(np.add(feat_sum_embedding, context_embed),
-                                           np.add(feat_ngram_num, context_num))
-                    # print(feat_embed)
-                    # feat_embed = np.square(feat_embed)
-                    feat_context_embed[id_batch][id_word] = torch.from_numpy(feat_embed)
-                    # print(feat_context_embed)
+                sentence_paded = self.handle_sentence(id_word=id_word, windows_size=windows_size, sentence=sentence)
+                # print(sentence_paded)
+                context_dict = self.handle_word_context(sentence=sentence_paded, word=word, windows_size=windows_size)
+                # print(context_dict)
+                context_sum_embed, context_count = self.context(context_di=context_dict[word], stoi=stoi)
+                # context_sum_embed, context_count = 0, 1
+                feat_embed = np.divide(np.add(feat_sum_embedding, context_sum_embed), np.add(feat_ngram_num, context_count))
+                feat_context_embed[id_batch][id_word] = torch.from_numpy(feat_embed)
         if self.args.use_cuda is True:
             feat_context_embed = Variable(feat_context_embed).cuda()
         else:
             feat_context_embed = Variable(feat_context_embed)
+        # feat_context_embed = self.batchNorm(feat_context_embed.permute(0, 2, 1))
         return feat_context_embed
 
     def forward(self, batch_features):
         word = batch_features.word_features
         x = self.handle_embedding_input(word)
         cated_embed = self.cat_embedding(x)
+        # cated_embed = self.batchNorm(cated_embed.permute(0, 2, 1))
 
         # lstm_out, _ = self.bilstm(cated_embed)
         # print(lstm_out.size())

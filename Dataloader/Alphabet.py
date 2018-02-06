@@ -121,6 +121,7 @@ class CreateAlphabet:
         self.label_alphabet.set_fixed_flag(True)
         if self.args.ininital_from_Pretrained is True:
             self.pretrained_alphabet.set_fixed_flag(True)
+            self.pretrained_alphabet_source.set_fixed_flag(True)
 
 
 class Alphabet:

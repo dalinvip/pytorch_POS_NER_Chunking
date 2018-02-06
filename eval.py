@@ -96,8 +96,8 @@ class EvalPRF:
             return False
         if (startLabel[0] == 's' or startLabel[0] == 'S') and startLabel[1] == '-':
             return False
-        # if (startLabel[0] == 'B' or startLabel[0] == 'b') and startLabel[1] == '-':
-        #     return False
+        if (startLabel[0] == 'B' or startLabel[0] == 'b') and startLabel[1] == '-':
+            return False
         if self.cleanLabel(label) != self.cleanLabel(startLabel):
             return False
         return True
