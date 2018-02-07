@@ -57,8 +57,8 @@ class PNC(nn.Module):
 
         self.batchNorm = nn.BatchNorm1d(D)
 
-        # self.linear = nn.Linear(in_features=D, out_features=C, bias=True)
-        self.linear = nn.Linear(in_features=D * 5, out_features=C, bias=True)
+        self.linear = nn.Linear(in_features=D, out_features=C, bias=True)
+        # self.linear = nn.Linear(in_features=D * 5, out_features=C, bias=True)
         init.xavier_uniform(self.linear.weight)
         self.linear.bias.data.uniform_(-np.sqrt(6 / (D + 1)), np.sqrt(6 / (D + 1)))
 
@@ -247,7 +247,7 @@ class PNC(nn.Module):
         cated_embed = self.cat_embedding(x)
         # cated_embed = self.batchNorm(cated_embed.permute(0, 2, 1))
 
-        # lstm_out, _ = self.bilstm(cated_embed)
+        lstm_out, _ = self.bilstm(cated_embed)
         # print(lstm_out.size())
         # print(cated_embed.data)
         # file = open("./Embedding.txt", mode="a")

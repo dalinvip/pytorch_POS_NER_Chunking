@@ -45,8 +45,10 @@ class PNC(nn.Module):
 
         self.batchNorm = nn.BatchNorm1d(D * 5)
 
-        self.linear = nn.Linear(in_features=D * self.cat_size, out_features=C, bias=True)
-        # self.linear = nn.Linear(in_features=D, out_features=C, bias=True)
+        self.bilstm = nn.LSTM(input_size=500, hidden_size=100, bidirectional=False, bias=True)
+
+        # self.linear = nn.Linear(in_features=D * self.cat_size, out_features=C, bias=True)
+        self.linear = nn.Linear(in_features=D, out_features=C, bias=True)
         init.xavier_uniform(self.linear.weight)
         # self.linear.bias.data.uniform_(-np.sqrt(6 / (D + 1)), np.sqrt(6 / (D + 1)))
 
@@ -81,6 +83,8 @@ class PNC(nn.Module):
 
         x = self.embed(word)  # (N,W,D)
         cated_embed = self.cat_embedding(x)
+        cated_embed = self.dropout_embed(cated_embed)
+        cated_embed, _ = self.bilstm(cated_embed)
         # cated_embed = self.batchNorm(cated_embed.permute(0, 2, 1))
         cated_embed = F.tanh(cated_embed)
         logit = self.linear(cated_embed)

@@ -85,15 +85,16 @@ class Hyperparams():
         self.min_freq = 1
 
         # word_Embedding
-        self.word_Embedding = False
-        self.ininital_from_Pretrained = True
+        self.word_Embedding = True
+        self.ininital_from_Pretrained = False
+        # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/context/pos_chunking_ner/enwiki.emb.source_feat_word_ngram_Conll2000.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/richfeat/enwiki.emb.feature"
-        # self.word_Embedding_Path_Source = "/home/lzl/mszhang/suda_file0120/file/file0120/richfeat/enwiki.emb.source"
-        # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2000.txt"
+        self.word_Embedding_Path_Source = "/home/lzl/mszhang/suda_file0120/file/file0120/richfeat/enwiki.emb.source"
+        self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2000.txt"
         # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_feat_Conll2000_1_NoZero.txt"
         # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2003_OOV.txt"
-        self.word_Embedding_Path = "./Pretrain_Embedding/richfeat.enwiki.emb.feature.small.0120.txt"
-        self.word_Embedding_Path_Source = "./Pretrain_Embedding/richfeat.enwiki.emb.source.small.0120.txt"
+        # self.word_Embedding_Path = "./Pretrain_Embedding/richfeat.enwiki.emb.feature.small.0120.txt"
+        # self.word_Embedding_Path_Source = "./Pretrain_Embedding/richfeat.enwiki.emb.source.small.0120.txt"
         # self.word_Embedding_Path = "./Pretrain_Embedding/parallel.enwiki.emb.feature.small"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file0120/file/file0120/context/pos_chunking_ner/enwiki.emb.source_Conll2003.txt"
         # self.word_Embedding_Path = "/home/lzl/mszhang/suda_file_0113/file/context/sentence_classification/enwiki.emb.source_CR.txt"
